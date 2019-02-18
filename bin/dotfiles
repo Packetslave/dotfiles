@@ -14,9 +14,9 @@ function link() {
   target=$2
 
   if [[ -e $HOME/$file ]] ; then
-    echo mv "$HOME/$file" "$HOME/$file.$ts"
+    mv "$HOME/$file" "$HOME/$file.$ts"
   fi
-  echo ln -s $here/$file $HOME/$target
+  ln -s $here/$file $HOME/$target
 }
 
 link emacs/emacs .emacs
