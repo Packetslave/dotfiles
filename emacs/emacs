@@ -28,11 +28,13 @@
 ;;;; -------- Misc ---------
 
 (defconst master-dir (getenv "LOCAL_ADMIN_SCRIPTS"))
-(load-library (expand-file-name "master.emacs" master-dir))
+(let ((path (expand-file-name "master.emacs" master-dir)))
+      (if (file-exists-p path)
+	  (load-library path)))
 
 ;;;; -------- Autocomplete --------
 
-(require 'go-autocomplete)
+(require 'go-autocomplete nil 'noerror) ;; might not exist
 (require 'auto-complete-config)
 (ac-config-default)
 

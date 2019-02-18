@@ -14,11 +14,13 @@ function link() {
   target=$2
 
   if [[ -e $HOME/$file ]] ; then
-    mv "$HOME/$file" "$HOME/$file.$ts"
+    mv -v "$HOME/$file" "$HOME/$file.$ts"
   fi
-  ln -s $here/$file $HOME/$target
+  ln -svf $here/$file $HOME/$target
 }
 
 link emacs/emacs .emacs
+link emacs/emacs.d/lisp .emacs.d/lisp
+
 link tmux/tmux.conf .tmux.conf
 link zsh/zshrc .zshrc
