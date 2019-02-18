@@ -2,15 +2,26 @@
 ## My zshrc
 ##
 
-if [[ -f $HOME/.zshrc.before ]] ; 
+#
+# Local config
+#
+
+if [[ -f $HOME/.zshrc.before ]] ; then
   . $HOME/.zshrc.before
 fi
 
-. $HOME/.fzf.zsh
-export PATH=/usr/local/tmux/bin:$PATH
 #
-# History
+# FZF for history search and whatnot
+#
+
+if [[ -f $HOME/.fzf.zsh ]] ; then
+  . $HOME/.fzf.zsh
+fi
+
+#
+# History configs
 # 
+
 HISTSIZE=500000
 SAVEHIST=5000000
 HISTFILE=~/.zsh_history
@@ -22,6 +33,10 @@ setopt HIST_VERIFY
 setopt INC_APPEND_HISTORY
 setopt SHARE_HISTORY
 
-if [[ -f $HOME/.zshrc.after ]] ; 
+#
+# Local config
+#
+
+if [[ -f $HOME/.zshrc.after ]] ; then
   . $HOME/.zshrc.after
 fi
