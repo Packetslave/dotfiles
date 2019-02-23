@@ -34,6 +34,19 @@ setopt INC_APPEND_HISTORY
 setopt SHARE_HISTORY
 
 #
+# Paths
+#
+function add_path() {
+  if [[ -z "$1" ]] ; then
+    return 
+  fi
+  if [[ -d "$1" ]] ; then
+    export PATH="$1":$PATH
+  fi
+}
+add_path $HOME/.brew/bin
+
+#
 # Local config
 #
 

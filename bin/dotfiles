@@ -2,25 +2,27 @@
 
 ts=`date +%Y%m%d%H%M%S`
 
-function realpath() {
-  python -c "import os; print(os.path.realpath('$1'))"
-}
-
-dir0="$(basename $0)"
-here=$(realpath "$dir0/..")
-
 function link() {
   file=$1
   target=$2
 
   if [[ -e $HOME/$file ]] ; then
-    mv -v "$HOME/$file" "$HOME/$file.$ts"
+   mv -v "$HOME/$file" "$HOME/$file.$ts"
   fi
-  ln -svf $here/$file $HOME/$target
+  ln -svf $HOME/dotfiles/$file $HOME/$target
 }
+
+if [[ ! -d $HOME/.emacs.d ]] ; then
+  mkdir $HOME/.emacs.d
+fi
 
 link emacs/emacs .emacs
 link emacs/emacs.d/lisp .emacs.d/lisp
 
 link tmux/tmux.conf .tmux.conf
+link tmux/tmuxline .tmuxline
+
 link zsh/zshrc .zshrc
+link zsh/fzf.zsh .fzf.zsh
+link zsh/fzf.completion.zsh .fzf.completion.zsh
+link zsh/fzf.key-bindings.zsh .fzf.key-bindings.zsh
