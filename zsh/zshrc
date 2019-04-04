@@ -53,3 +53,5 @@ add_path $HOME/.brew/bin
 if [[ -f $HOME/.zshrc.after ]] ; then
   . $HOME/.zshrc.after
 fi
+
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh

@@ -25,6 +25,18 @@
 
 (add-to-list 'load-path "~/.emacs.d/lisp")
 
+;;;; -------- Golang --------
+
+(require 'go-autocomplete nil 'noerror) ;; might not exist
+(defun bl/go-mode-hook ()
+  ; Use goimports instead of go-fmt
+  (setq gofmt-command "goimports")
+
+  ; Call Gofmt before saving
+  (add-hook 'before-save-hook 'gofmt-before-save)
+)
+(add-hook 'go-mode-hook 'bl/go-mode-hook)
+
 ;;;; -------- Misc ---------
 
 (defconst master-dir (getenv "LOCAL_ADMIN_SCRIPTS"))
@@ -34,7 +46,6 @@
 
 ;;;; -------- Autocomplete --------
 
-(require 'go-autocomplete nil 'noerror) ;; might not exist
 (require 'auto-complete-config)
 (ac-config-default)
 
