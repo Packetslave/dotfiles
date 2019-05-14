@@ -2,12 +2,21 @@
 ## My zshrc
 ##
 
+function mylog ()
+{
+  if [[ $- == *i* ]]
+  then
+    echo "[zsh] $1"
+  fi
+}
+
 #
 # Local config
 #
 
 if [[ -f $HOME/.zshrc.before ]] ; then
   . $HOME/.zshrc.before
+  mylog ".zshrc.before loaded"
 fi
 
 #
@@ -16,6 +25,7 @@ fi
 
 if [[ -f $HOME/.fzf.zsh ]] ; then
   . $HOME/.fzf.zsh
+  mylog "FZF enabled"
 fi
 
 #
@@ -47,9 +57,27 @@ function add_path() {
 add_path $HOME/.brew/bin
 
 #
+# Prompt
+#
+if [[ -d "$HOME/src/spaceship-prompt" ]] ; then
+  if [[ ! -L "$HOME/src/spaceship-prompt/prompt_spaceship_setup" ]] ; then
+    ln -sf $HOME/src/spaceship-prompt/spaceship.zsh $HOME/src/spaceship-prompt/prompt_spaceship_setup
+  fi
+else
+  mylog "WARNING: spaceship-prompt is not installed"
+  mylog "cd ~/src && git clone https://github.com/denysdovhan/spaceship-prompt.git"
+fi
+
+fpath=( "$HOME/src/spaceship-prompt" $fpath )
+autoload -U promptinit; promptinit
+
+prompt spaceship
+
+#
 # Local config
 #
 
 if [[ -f $HOME/.zshrc.after ]] ; then
   . $HOME/.zshrc.after
+  mylog ".zshrc.after loaded"
 fi
