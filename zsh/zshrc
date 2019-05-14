@@ -20,6 +20,22 @@ if [[ -f $HOME/.zshrc.before ]] ; then
 fi
 
 #
+# oh-my-zsh
+#
+if [[ -d "$HOME/src/external/oh-my-zsh" ]] ; then
+  export ZSH=$HOME/src/external/oh-my-zsh
+  plugins=(
+    git
+    wd
+  )
+  source $ZSH/oh-my-zsh.sh
+  mylog "oh-my-zsh enabled"
+else
+  mylog "WARNING: oh my zsh not installed"
+  mylog "cd ~/src/external && git clone https://github.com/robbyrussell/oh-my-zsh.git"
+fi
+
+#
 # FZF for history search and whatnot
 #
 
@@ -58,20 +74,19 @@ add_path $HOME/.brew/bin
 
 #
 # Prompt
+# TODO(blanders): move this to oh-my-zsh custom config
 #
-if [[ -d "$HOME/src/spaceship-prompt" ]] ; then
-  if [[ ! -L "$HOME/src/spaceship-prompt/prompt_spaceship_setup" ]] ; then
-    ln -sf $HOME/src/spaceship-prompt/spaceship.zsh $HOME/src/spaceship-prompt/prompt_spaceship_setup
+if [[ -d "$HOME/src/external/spaceship-prompt" ]] ; then
+  if [[ ! -L "$HOME/src/external/spaceship-prompt/prompt_spaceship_setup" ]] ; then
+    ln -sf $HOME/src/external/spaceship-prompt/spaceship.zsh $HOME/src/external/spaceship-prompt/prompt_spaceship_setup
   fi
+  fpath=( "$HOME/src/external/spaceship-prompt" $fpath )
+  autoload -U promptinit; promptinit
+  prompt spaceship
 else
   mylog "WARNING: spaceship-prompt is not installed"
-  mylog "cd ~/src && git clone https://github.com/denysdovhan/spaceship-prompt.git"
+  mylog "cd ~/src/external && git clone https://github.com/denysdovhan/spaceship-prompt.git"
 fi
-
-fpath=( "$HOME/src/spaceship-prompt" $fpath )
-autoload -U promptinit; promptinit
-
-prompt spaceship
 
 #
 # Local config
