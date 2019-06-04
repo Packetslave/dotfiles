@@ -47,6 +47,26 @@ function add_path() {
 add_path $HOME/.brew/bin
 
 #
+# Functions
+#
+
+function s2c { tr ' ' ',' }
+function s2n { tr ' ' '\n' }
+
+function c2s { tr ',' ' ' }
+function c2n { tr ',' '\n' }
+
+function n2c { tr '\n' ',' }
+function n2s { tr '\n' ' ' }
+
+function minus1 { sed -e 's/.$//' }
+
+function device_for_path ()
+{
+  df --output=source $1 | tail -1
+}
+
+#
 # Local config
 #
 
