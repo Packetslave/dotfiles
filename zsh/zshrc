@@ -20,32 +20,6 @@ if [[ -f $HOME/.zshrc.before ]] ; then
 fi
 
 #
-# oh-my-zsh
-#
-if [[ -d "$HOME/src/external/oh-my-zsh" ]] ; then
-  export ZSH_THEME="agnoster"
-  export ZSH=$HOME/src/external/oh-my-zsh
-  plugins=(
-    git
-    wd
-  )
-  source $ZSH/oh-my-zsh.sh
-  mylog "oh-my-zsh enabled"
-else
-  mylog "WARNING: oh my zsh not installed"
-  mylog "cd ~/src/external && git clone https://github.com/robbyrussell/oh-my-zsh.git"
-fi
-
-#
-# FZF for history search and whatnot
-#
-
-if [[ -f $HOME/.fzf.zsh ]] ; then
-  . $HOME/.fzf.zsh
-  mylog "FZF enabled"
-fi
-
-#
 # History configs
 # 
 
@@ -102,6 +76,31 @@ function freq () {
   | nl \
   |  head -n10
 }
+
+#
+# oh-my-zsh
+#
+if [[ -d "$HOME/src/external/oh-my-zsh" ]] ; then
+  export ZSH_THEME="agnoster"
+  export ZSH=$HOME/src/external/oh-my-zsh
+  plugins=(
+    colored-man-pages
+    colorize
+    common-aliases
+    fzf
+    git
+    iterm2
+    mosh
+    tmux
+    wd
+  )
+  source $ZSH/oh-my-zsh.sh
+  mylog "oh-my-zsh enabled"
+else
+  mylog "WARNING: oh my zsh not installed"
+  mylog "cd ~/src/external && git clone https://github.com/robbyrussell/oh-my-zsh.git"
+fi
+
 
 #
 # Local config
