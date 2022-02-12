@@ -1,0 +1,166 @@
+;;;; -*- Emacs-Lisp -*-
+;;;; import the master.emacs file
+
+(let ((private-file (expand-file-name "~/.emacs.before")))
+  (when (file-exists-p private-file)
+    (load-file private-file)))
+
+;;;; -------- Packages --------
+
+(package-initialize)
+
+(add-to-list 'package-archives
+             '("melpa" . "https://melpa.org/packages/") t)
+
+(setq package-list '(go-mode
+                     auto-complete
+                     ag
+                     wgrep-ag))
+
+(package-refresh-contents)
+
+(dolist (package package-list)
+  (unless (package-installed-p package)
+    (package-install package)))
+
+(add-to-list 'load-path "~/.emacs.d/lisp")
+
+;;;; -------- Golang --------
+
+(require 'go-autocomplete nil 'noerror) ;; might not exist
+(defun bl/go-mode-hook ()
+  ; Use goimports instead of go-fmt
+  (setq gofmt-command "goimports")
+
+  ; Call Gofmt before saving
+  (add-hook 'before-save-hook 'gofmt-before-save)
+)
+(add-hook 'go-mode-hook 'bl/go-mode-hook)
+
+;;;; -------- Misc ---------
+
+(defconst master-dir (getenv "LOCAL_ADMIN_SCRIPTS"))
+(let ((path (expand-file-name "master.emacs" master-dir)))
+      (if (file-exists-p path)
+	  (load-library path)))
+
+;;;; -------- Autocomplete --------
+
+(require 'auto-complete-config)
+(ac-config-default)
+
+;;;; -------- Global Keybindings --------
+
+;; sane keybindings for splits
+(global-set-key "\C-x|" 'split-window-right)
+(global-set-key "\C-x-" 'split-window-below)
+
+;; kill keys
+(global-set-key "\C-w" 'backward-kill-word)
+(global-set-key "\C-x\C-k" 'kill-region)
+(global-set-key "\C-c\C-k" 'kill-region)
+(global-set-key "\M-k" 'backward-kill-line)
+
+;; easier M-x
+(global-set-key "\C-x\C-m" 'execute-extended-command)
+(global-set-key "\C-c\C-m" 'execute-extended-command)
+
+;; Kinesis puts the backtick in an inconvenient place
+(global-set-key "\C-x=" 'next-error)
+
+;;;; -------- Smart Comments --------
+
+;; Original idea from
+;; http://www.opensubscriber.com/message/emacs-devel@gnu.org/10971693.html
+(defun comment-dwim-line (&optional arg)
+  "Replacement for the comment-dwim command.
+    If no region is selected and current line is not blank and we
+          are not at the end of the line, then comment current
+          line.  Replaces default behaviour of comment-dwim, when
+          it inserts comment at the end of the line."
+  (interactive "*P")
+  (comment-normalize-vars)
+  (if (not (region-active-p))
+      (comment-or-uncomment-region (line-beginning-position)
+                                   (line-end-position))
+    (comment-dwim arg)))
+(global-set-key (kbd "C-;") 'comment-dwim-line)
+
+;;;; -------- Silver Searcher --------
+
+(require 'ag)
+(global-set-key "\C-caa" 'ag)
+(global-set-key "\C-caf" 'ag-files)
+(global-set-key "\C-car" 'ag-regexp)
+
+(autoload 'wgrep-ag-setup "wgrep-ag")
+(add-hook 'ag-mode-hook 'wgrep-ag-setup)
+
+;;;; -------- Backup Directories --------
+
+(setq backup-directory-alist
+      `((".*" . ,temporary-file-directory)))
+(setq auto-save-file-name-transforms
+      `((".*" ,temporary-file-directory t)))
+
+;;;; -------- Quit Other Window --------
+
+(defun bl\quit-other-window ()
+  (interactive)
+  (let ((win-curr (selected-window))
+        (win-other (next-window)))
+    (select-window win-other)
+    (quit-window)
+    (select-window win-curr)))
+(global-set-key "\C-xq" 'bl\quit-other-window)
+
+;;;; -------- Rename File and Buffer --------
+
+(defun rename-current-file-and-buffer ()
+  "Renames current buffer and file it is visiting."
+  (interactive)
+  (let ((name (buffer-name))
+        (filename (buffer-file-name)))
+    (if (not (and filename (file-exists-p filename)))
+        (error "Buffer '%s' is not visiting a file!" name)
+      (let ((new-name (read-file-name "New name: " filename)))
+        (if (get-buffer new-name)
+            (error "A buffer named '%s' already exists!" new-name)
+          (rename-file filename new-name 1)
+          (rename-buffer new-name)
+          (set-visited-file-name new-name)
+          (set-buffer-modified-p nil)
+          (message "File '%s' successfully renamed to '%s'"
+                   name (file-name-nondirectory new-name)))))))
+
+;;;; -------- Make Buffer Names Unique
+
+(require 'uniquify)
+(setq uniquify-buffer-name-style 'post-forward)
+(setq uniquify-separator ":")
+
+;;;; -------- Custom --------
+
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-selected-packages (quote (magit yaml-mode ag go-mode auto-complete))))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
+
+;;;; -------- Private / Local Configs ---------
+
+(add-hook
+ 'after-init-hook
+ (lambda ()
+   (let ((private-file (expand-file-name "~/.emacs.after")))
+     (when (file-exists-p private-file)
+       (load-file private-file)))))
+
+;;;; end
