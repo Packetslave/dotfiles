@@ -5,9 +5,6 @@
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(if (eq system-type 'darwin)
-    (progn
-      (setenv "PATH" (mapconcat #'identity exec-path path-separator))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; Backup and temporary files
@@ -50,6 +47,10 @@
       (eval-print-last-sexp)))
   (load bootstrap-file nil 'nomessage))
 
+;; Set exec path from the shell's PATH
+(straight-use-package 'exec-path-from-shell)
+(exec-path-from-shell-initialize)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; THEME
 
@@ -89,7 +90,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; ORG MODE
 
-(setq org-directory (format "%s/tmp/_docs/org" bl:dropbox))
+;(setq org-directory (format "%s/tmp/_docs/org" bl:dropbox))
 
 ;; custom colors for Org TODO states
 (setq org-todo-keyword-faces
@@ -107,9 +108,9 @@
 (define-key global-map "\C-c\M-s" 'org-save-all-org-buffers)
 
 (setq org-log-done t)
-(setq org-agenda-files
-      (directory-files-recursively
-       (format "%s/tmp/_docs/org" bl:dropbox) "\\.org$"))
+;(setq org-agenda-files
+;      (directory-files-recursively
+;       (format "%s/tmp/_docs/org" bl:dropbox) "\\.org$"))
 
 (setq org-enforce-todo-dependencies t)
 (setq org-agenda-dim-blocked-tasks 'invisble)
@@ -120,20 +121,20 @@
 (setq org-tag-alist '(("today" . ?t) ("errands" . ?e) ("home" . ?h)))
 (setq org-startup-folded 'content)
 
-(defun bl:get-journal-file-today ()
-    (format "%s/journal.org" org-directory))
+;(defun bl:get-journal-file-today ()
+;    (format "%s/journal.org" org-directory))
 
 (setq org-agenda-todo-ignore-scheduled 'future)
 (setq org-agenda-tags-todo-honor-ignore-options t)
 
-(setq org-capture-templates `(
-    ;; ...
-    ("j" "Journal Note"
-         entry (file ,(bl:get-journal-file-today))
-         "* %T: %?\n\n  %i"
-         :empty-lines 1)
-    ;; ..
-    ))
+;(setq org-capture-templates `(
+;    ;; ...
+;    ("j" "Journal Note"
+;         entry (file ,(bl:get-journal-file-today))
+;         "* %T: %?\n\n  %i"
+;         :empty-lines 1)
+;    ;; ..
+;    ))
 
 (defun org-archive-done-tasks ()
   (interactive)
@@ -144,11 +145,17 @@
    "/DONE" 'file))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; MAGIT
+
+(straight-use-package 'magit)
+(global-set-key "\C-xg" 'magit-status)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; RANDOM STUFF
 
-(setq load-path (add-to-list
-		 'load-path (format "%s/Library/emacs-wiki-2.7.2" bl:dropbox)))
-(require 'emacs-wiki)
+;(setq load-path (add-to-list
+;		 'load-path (format "%s/Library/emacs-wiki-2.7.2" bl:dropbox)))
+;(require 'emacs-wiki)
 
 (straight-use-package 'yaml-mode)
 (straight-use-package 'crux)
@@ -187,6 +194,9 @@
 (add-to-list 'default-frame-alist '(height . 56))
 (add-to-list 'default-frame-alist '(width . 100))
 
+(straight-use-package 'easy-hugo)
+(setq easy-hugo-basedir "~/src/packetslave/")
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; CUSTOM
 
@@ -210,7 +220,7 @@
 
 (if (eq system-type 'darwin)
     (progn
-      (set-face-attribute 'default nil :height (+ 121 121))
+      ;(set-face-attribute 'default nil :height (+ 121 121))
       (setq mac-option-key-is-meta nil)
       (setq mac-command-key-is-meta t)
       (setq mac-command-modifier 'meta)
