@@ -2,6 +2,8 @@
 ## My zshrc
 ##
 
+eval "$(/opt/homebrew/bin/brew shellenv)"
+
 function mylog ()
 {
   if [[ $- == *i* ]]
@@ -45,8 +47,6 @@ function add_path() {
     export PATH="$1":$PATH
   fi
 }
-add_path $HOME/.brew/bin
-
 #
 # Functions
 #
@@ -107,9 +107,8 @@ if [[ -d "$HOME/src/external/oh-my-zsh" ]] ; then
   mylog "oh-my-zsh enabled"
 else
   mylog "WARNING: oh my zsh not installed"
-  mylog "mkdir -pf ~/src/external && cd ~/src/external && git clone https://github.com/robbyrussell/oh-my-zsh.git"
+  mylog "mkdir -p ~/src/external && cd ~/src/external && git clone https://github.com/robbyrussell/oh-my-zsh.git"
 fi
-
 
 #
 # Local config
@@ -120,3 +119,5 @@ if [[ -f $HOME/.zshrc.after ]] ; then
   mylog ".zshrc.after loaded"
 fi
 
+# Add RVM to PATH for scripting. Make sure this is the last PATH variable change.
+export PATH="$PATH:$HOME/.rvm/bin"
