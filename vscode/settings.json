@@ -4,22 +4,21 @@
     "c-cpp-flylint.cppcheck.enable": false,
     "c-cpp-flylint.flawfinder.enable": false,
     "c-cpp-flylint.flexelint.enable": false,
-    "[python]": {
-    },
-
+    "[python]": {},
     "files.associations": {
         "*.asm": "asm-intel-x86-generic"
     },
-
     "workbench.tree.indent": 14,
     "workbench.tree.renderIndentGuides": "always",
     "workbench.colorCustomizations": {
         "tree.indentGuidesStroke": "#05ef3c"
     },
     "workbench.iconTheme": "material-icon-theme",
-
     "editor.cursorBlinking": "smooth",
     "editor.cursorSmoothCaretAnimation": "on",
-
-    "window.titleBarStyle": "native"
+    "window.titleBarStyle": "native",
+    "editor.fontFamily": "'PragmataPro Mono', Menlo, Monaco, 'Courier New', monospace",
+    "editor.fontSize": 14,
+    "editor.formatOnSave": true,
+    "editor.minimap.autohide": true
 }
