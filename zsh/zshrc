@@ -1,6 +1,7 @@
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
 # Initialization code that may require console input (password prompts, [y/n]
 # confirmations, etc.) must go above this block; everything else may go below.
+
 if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
@@ -117,6 +118,11 @@ else
   mylog "WARNING: oh my zsh not installed"
   mylog "mkdir -p ~/src/external && cd ~/src/external && git clone https://github.com/robbyrussell/oh-my-zsh.git"
 fi
+
+alias a1='awk "{print \$1}"'
+alias a2='awk "{print \$2}"'
+alias a3='awk "{print \$3}"'
+alias a4='awk "{print \$4}"'
 
 #
 # Local config
