@@ -12,21 +12,12 @@ fi
 
 eval "$(/opt/homebrew/bin/brew shellenv)"
 
-function mylog ()
-{
-  if [[ $- == *i* ]]
-  then
-    echo "[zsh] $1"
-  fi
-}
-
 #
 # Local config
 #
 
 if [[ -f $HOME/.zshrc.before ]] ; then
   . $HOME/.zshrc.before
-  mylog ".zshrc.before loaded"
 fi
 
 #
@@ -89,8 +80,8 @@ function freq () {
 # fzf
 # 
 if [[ ! -d "$HOME/.fzf" ]] ; then
-  mylog "WARNING: fzf not installed"
-  mylog "git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf && ~/.fzf/install"
+  >&2 echo "WARNING: fzf not installed"
+  >&2 "git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf && ~/.fzf/install"
 fi
 export FZF_TMUX=1
 
@@ -98,8 +89,6 @@ export FZF_TMUX=1
 # oh-my-zsh
 #
 if [[ -d "$HOME/src/external/oh-my-zsh" ]] ; then
-  #export ZSH_THEME="agnoster"
-  export ZSH_THEME="powerlevel10k/powerlevel10k"
   export ZSH=$HOME/src/external/oh-my-zsh
   plugins=(
     colored-man-pages
@@ -113,10 +102,9 @@ if [[ -d "$HOME/src/external/oh-my-zsh" ]] ; then
     wd
   )
   source $ZSH/oh-my-zsh.sh
-  mylog "oh-my-zsh enabled"
 else
-  mylog "WARNING: oh my zsh not installed"
-  mylog "mkdir -p ~/src/external && cd ~/src/external && git clone https://github.com/robbyrussell/oh-my-zsh.git"
+  >&2 "WARNING: oh my zsh not installed"
+  >&2 "mkdir -p ~/src/external && cd ~/src/external && git clone https://github.com/robbyrussell/oh-my-zsh.git"
 fi
 
 alias a1='awk "{print \$1}"'
@@ -124,13 +112,17 @@ alias a2='awk "{print \$2}"'
 alias a3='awk "{print \$3}"'
 alias a4='awk "{print \$4}"'
 
+unalias md
+function md() {
+  mkdir $1 && cd $1
+}
+
 #
 # Local config
 #
 
 if [[ -f $HOME/.zshrc.after ]] ; then
   . $HOME/.zshrc.after
-  mylog ".zshrc.after loaded"
 fi
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
