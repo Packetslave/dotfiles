@@ -1,24 +1,31 @@
 {
-    "C_Cpp.default.cppStandard": "c++20",
-    "C_Cpp.default.intelliSenseMode": "macos-clang-arm64",
-    "c-cpp-flylint.cppcheck.enable": false,
-    "c-cpp-flylint.flawfinder.enable": false,
-    "c-cpp-flylint.flexelint.enable": false,
-    "[python]": {},
-    "files.associations": {
-        "*.asm": "asm-intel-x86-generic"
-    },
-    "workbench.tree.indent": 14,
-    "workbench.tree.renderIndentGuides": "always",
-    "workbench.colorCustomizations": {
-        "tree.indentGuidesStroke": "#05ef3c"
-    },
-    "workbench.iconTheme": "material-icon-theme",
-    "editor.cursorBlinking": "smooth",
-    "editor.cursorSmoothCaretAnimation": "on",
-    "window.titleBarStyle": "native",
-    "editor.fontFamily": "'PragmataPro Mono', Menlo, Monaco, 'Courier New', monospace",
-    "editor.fontSize": 14,
-    "editor.formatOnSave": true,
-    "editor.minimap.autohide": true
+  "sync.autoUpload": true,
+  "sync.autoDownload": true,
+  "sync.gist": "724fbf58b749551bd910e3f9a1d80c9e",
+  "livereload.debug": true,
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[html]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "diffEditor.ignoreTrimWhitespace": true,
+  "clang-format.fallbackStyle": "Google",
+  "[cpp]": {
+    "editor.defaultFormatter": "ms-vscode.cpptools"
+  },
+  "C_Cpp.clang_format_sortIncludes": true,
+"editor.fontSize": 14,
+  "sync.forceUpload": true,
+  "bazel.showExtensionLog": true,
+  "python.jediEnabled": false,
+  "terminal.integrated.fontFamily": "PragmataPro",
+  "terminal.integrated.fontSize": 14,
+"go.useLanguageServer": true,
+  "editor.formatOnSave": true,
+  "editor.formatOnType": true,
+  "sync.quietSync": true,
+  "C_Cpp.updateChannel": "Insiders",
+"cmake.configureOnOpen": true,
+"C_Cpp.default.intelliSenseMode": "macos-clang-arm64",
 }

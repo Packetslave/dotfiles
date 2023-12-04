@@ -4,7 +4,7 @@
 #
 
 BREW="/opt/homebrew/bin/brew"
-DB="~/Dropbox/Library/Homebrew"
+DB="$HOME/Dropbox/Library/Homebrew"
 
 # first get local settings
 echo "Reading local settings ..."
@@ -32,5 +32,5 @@ done
 # Install missing Homebrew packages
 echo "Install missing packages ..."
 for PACKAGE in `cat ${DB}/brew-sync.installed`; do
-	$BREW install ${PACKAGE}
+	grep -Fq "$PACKAGE" /tmp/brew-sync.installed || $BREW install ${PACKAGE}
 done
