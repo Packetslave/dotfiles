@@ -94,9 +94,13 @@ if [[ -d "$HOME/src/external/oh-my-zsh" ]] ; then
     colored-man-pages
     colorize
     common-aliases
+    docker
+    docker-compose
     fzf
     git
+    golang
     iterm2
+    kubectl
     mosh
     tmux
     wd
@@ -144,4 +148,6 @@ fi
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
+[[ ! -f /opt/homebrew/share/powerlevel10k/powerlevel10k.zsh-theme ]] || source /opt/homebrew/share/powerlevel10k/powerlevel10k.zsh-theme
 export AWS_SDK_LOAD_CONFIG=true
+alias gdm=git diff $(git_main_branch)
