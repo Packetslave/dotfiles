@@ -10,7 +10,9 @@ fi
 ## My zshrc
 ##
 
-eval "$(/opt/homebrew/bin/brew shellenv)"
+if [ -f /opt/homebrew/bin/brew ] ; then
+  eval "$(/opt/homebrew/bin/brew shellenv)"
+fi
 
 #
 # Local config
@@ -81,7 +83,7 @@ function freq () {
 # 
 if [[ ! -d "$HOME/.fzf" ]] ; then
   >&2 echo "WARNING: fzf not installed"
-  >&2 "git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf && ~/.fzf/install"
+  >&2 git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf && ~/.fzf/install
 fi
 export FZF_TMUX=1
 
@@ -89,6 +91,7 @@ export FZF_TMUX=1
 # oh-my-zsh
 #
 if [[ -d "$HOME/src/external/oh-my-zsh" ]] ; then
+  export ZSH_THEME="powerlevel10k/powerlevel10k"
   export ZSH=$HOME/src/external/oh-my-zsh
   plugins=(
     colored-man-pages
