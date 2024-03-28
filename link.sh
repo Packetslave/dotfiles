@@ -10,5 +10,8 @@ ln -sf ~/dotfiles/vim/vim ~/.vim
 mkdir -p ~/.emacs.d
 ln -sf ~/dotfiles/emacs/emacs.d/init.el ~/.emacs.d/init.el
 
+mkdir -p ~/.tmux/plugins
+ln -sf ~/dotfiles/tmux/plugins ~/.tmux
+
 rm ~/bin
 ln -sf ~/dotfiles/bin ~/bin
