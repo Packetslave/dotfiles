@@ -104,7 +104,6 @@ if [[ -d "$HOME/src/external/oh-my-zsh" ]] ; then
     iterm2
     kubectl
     mosh
-    tmux
     wd
   )
   source $ZSH/oh-my-zsh.sh
