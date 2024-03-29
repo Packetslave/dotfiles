@@ -91,7 +91,6 @@ export FZF_TMUX=1
 # oh-my-zsh
 #
 if [[ -d "$HOME/src/external/oh-my-zsh" ]] ; then
-  export ZSH_THEME="powerlevel10k/powerlevel10k"
   export ZSH=$HOME/src/external/oh-my-zsh
   plugins=(
     colored-man-pages
@@ -151,6 +150,9 @@ fi
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
-[[ ! -f /opt/homebrew/share/powerlevel10k/powerlevel10k.zsh-theme ]] || source /opt/homebrew/share/powerlevel10k/powerlevel10k.zsh-theme
+if [[ -d /opt/homebrew ]] ; then
+    source /opt/homebrew/share/powerlevel10k/powerlevel10k.zsh-theme
+fi
+
 export AWS_SDK_LOAD_CONFIG=true
 alias gdm=git diff $(git_main_branch)

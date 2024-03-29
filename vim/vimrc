@@ -97,6 +97,7 @@ set laststatus=2
 
 execute pathogen#infect()
 
+let mapleader = ","
 nnoremap <leader>n :NERDTreeFocus<CR>
 nnoremap <C-n> :NERDTree<CR>
 nnoremap <C-t> :NERDTreeToggle<CR>
