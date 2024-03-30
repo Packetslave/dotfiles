@@ -93,6 +93,7 @@ export FZF_TMUX=1
 if [[ -d "$HOME/src/external/oh-my-zsh" ]] ; then
   export ZSH=$HOME/src/external/oh-my-zsh
   plugins=(
+    brew
     colored-man-pages
     colorize
     common-aliases
@@ -105,6 +106,7 @@ if [[ -d "$HOME/src/external/oh-my-zsh" ]] ; then
     kubectl
     mosh
     wd
+    zoxide
   )
   source $ZSH/oh-my-zsh.sh
 else
