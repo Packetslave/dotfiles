@@ -1,0 +1,35 @@
+- name: Bootstrap development environment
+  hosts: localhost
+
+  tasks:
+    - name: Install packages with apt
+      community.general.homebrew:
+        name:
+          - abseil
+          - ansible
+          - bat
+          - codecrafters
+          - coreutils
+          - ffmpeg
+          - go
+          - grpcurl
+          - hugo
+          - jq
+          - kubernetes-cli
+          - neovim
+          - node
+          - openjdk
+          - powerlevel10k
+          - protobuf
+          - protoc-gen-go
+          - protoc-gen-go-grpc
+          - pygments
+          - ripgrep
+          - rustfmt
+          - rustup-init
+          - tmux
+          - xz
+          - yt-dlp
+          - zoxide
+        state: present
+        update_homebrew: yes
