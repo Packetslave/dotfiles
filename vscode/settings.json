@@ -9,23 +9,39 @@
   "[html]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  "diffEditor.ignoreTrimWhitespace": true,
+  "diffEditor.ignoreTrimWhitespace": false,
   "clang-format.fallbackStyle": "Google",
   "[cpp]": {
     "editor.defaultFormatter": "ms-vscode.cpptools"
   },
   "C_Cpp.clang_format_sortIncludes": true,
-"editor.fontSize": 14,
+  "editor.fontSize": 16,
   "sync.forceUpload": true,
   "bazel.showExtensionLog": true,
   "python.jediEnabled": false,
   "terminal.integrated.fontFamily": "PragmataPro",
   "terminal.integrated.fontSize": 14,
-"go.useLanguageServer": true,
+  "go.useLanguageServer": true,
   "editor.formatOnSave": true,
   "editor.formatOnType": true,
   "sync.quietSync": true,
   "C_Cpp.updateChannel": "Insiders",
 "cmake.configureOnOpen": true,
 "C_Cpp.default.intelliSenseMode": "macos-clang-arm64",
+  "editor.fontLigatures": true,
+  "editor.lineHeight": 1.3,
+  "editor.rulers": [
+    80, 120
+  ],
+  "workbench.tree.renderIndentGuides": "always",
+  "editor.fontFamily": "'Cascadia Code', Menlo, Monaco, 'Courier New', monospace",
+  "files.watcherExclude": {
+    "**/.terraform/*/**": true,
+  },
+  "files.exclude": {
+    "**/.terraform": true,
+    "**/.terragrunt": true
+  },
+  "go.toolsManagement.autoUpdate": true,
+  "workbench.colorTheme": "Default Dark Modern"
 }
