@@ -2,7 +2,33 @@
   hosts: localhost
 
   tasks:
-    - name: Install packages with apt
+    - name: Create links - tmux dir
+      ansible.builtin.file:
+        path: ~/.tmux
+        state: directory
+    - name: Create links - tmux conf
+      ansible.builtin.file:
+        src: ~/dotfiles/tmux/tmux.conf
+        dest: ~/.tmux.conf
+        state: link
+    - name: Create links - tmux plugins
+      ansible.builtin.file:
+        src: ~/dotfiles/tmux/plugins
+        dest: ~/.tmux/plugins
+        state: link
+
+    - name: Create links - zsh config
+      ansible.builtin.file:
+        src: ~/dotfiles/zsh/zshrc
+        dest: ~/.zshrc
+        state: link
+    - name: Create links - zsh p10k
+      ansible.builtin.file:
+        src: ~/dotfiles/zsh/p10k.zsh
+        dest: ~/.p10k.zsh
+        state: link
+
+    - name: Install packages with homebrew
       community.general.homebrew:
         name:
           - abseil
@@ -32,4 +58,3 @@
           - yt-dlp
           - zoxide
         state: present
-        update_homebrew: yes
