@@ -2,13 +2,19 @@
   hosts: localhost
 
   tasks:
-    - name: Install packages with apt
+    - name: Tap external repositories
+      community.general.homebrew_tap:
+        name: 
+          - codecrafters-io/tap
+          - noahgorstein/tap
+
+    - name: Install packages with homebrew
       community.general.homebrew:
         name:
           - abseil
           - ansible
           - bat
-          - codecrafters
+          - codecrafters-io/tap/codecrafters
           - coreutils
           - ffmpeg
           - go
@@ -17,6 +23,7 @@
           - jq
           - kubernetes-cli
           - neovim
+          - noahgorstein/tap/jqp
           - node
           - openjdk
           - powerlevel10k
