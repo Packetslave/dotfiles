@@ -33,7 +33,8 @@
         name: 
           - codecrafters-io/tap
           - noahgorstein/tap
-=   - name: Install packages with homebrew
+
+    - name: Install packages with homebrew
       community.general.homebrew:
         name:
           - abseil
