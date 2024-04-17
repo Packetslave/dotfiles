@@ -47,6 +47,7 @@
           - grpcurl
           - hugo
           - jq
+          - kind
           - kubernetes-cli
           - neovim
           - noahgorstein/tap/jqp
