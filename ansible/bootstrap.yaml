@@ -32,6 +32,7 @@
       community.general.homebrew_tap:
         name: 
           - codecrafters-io/tap
+          - joshmedeski/sesh
           - noahgorstein/tap
 
     - name: Install packages with homebrew
@@ -46,6 +47,7 @@
           - go
           - grpcurl
           - hugo
+          - joshmedeski/sesh/sesh
           - jq
           - kind
           - kubernetes-cli
@@ -53,6 +55,7 @@
           - noahgorstein/tap/jqp
           - node
           - openjdk
+          - pipenv
           - powerlevel10k
           - protobuf
           - protoc-gen-go
