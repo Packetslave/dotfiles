@@ -157,3 +157,4 @@ fi
 
 export AWS_SDK_LOAD_CONFIG=true
 alias gdm=git diff $(git_main_branch)
+export PATH=/usr/class/bin:$PATH
