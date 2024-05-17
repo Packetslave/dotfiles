@@ -28,23 +28,34 @@
         dest: ~/.p10k.zsh
         state: link
 
+    - name: Tap external repositories
+      community.general.homebrew_tap:
+        name: 
+          - codecrafters-io/tap
+          - joshmedeski/sesh
+          - noahgorstein/tap
+
     - name: Install packages with homebrew
       community.general.homebrew:
         name:
           - abseil
           - ansible
           - bat
-          - codecrafters
+          - codecrafters-io/tap/codecrafters
           - coreutils
           - ffmpeg
           - go
           - grpcurl
           - hugo
+          - joshmedeski/sesh/sesh
           - jq
+          - kind
           - kubernetes-cli
           - neovim
+          - noahgorstein/tap/jqp
           - node
           - openjdk
+          - pipenv
           - powerlevel10k
           - protobuf
           - protoc-gen-go

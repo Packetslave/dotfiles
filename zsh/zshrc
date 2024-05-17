@@ -138,6 +138,8 @@ function frg {
   fi
 }
 
+alias ap="ansible-playbook ~/dotfiles/ansible/bootstrap.yaml"
+
 #
 # Local config
 #
