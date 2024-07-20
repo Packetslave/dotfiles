@@ -79,15 +79,6 @@ function freq () {
 }
 
 #
-# fzf
-# 
-if [[ ! -d "$HOME/.fzf" ]] ; then
-  >&2 echo "WARNING: fzf not installed"
-  >&2 git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf && ~/.fzf/install
-fi
-export FZF_TMUX=1
-
-#
 # oh-my-zsh
 #
 if [[ -d "$HOME/src/external/oh-my-zsh" ]] ; then
@@ -147,8 +138,6 @@ alias ap="ansible-playbook ~/dotfiles/ansible/bootstrap.yaml"
 if [[ -f $HOME/.zshrc.after ]] ; then
   . $HOME/.zshrc.after
 fi
-
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh

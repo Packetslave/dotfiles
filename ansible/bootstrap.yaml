@@ -38,10 +38,12 @@
     - name: Install packages with homebrew
       community.general.homebrew:
         name:
+          - 1password-cli
           - abseil
           - ansible
           - bat
           - codecrafters-io/tap/codecrafters
+          - code-server
           - coreutils
           - ffmpeg
           - go

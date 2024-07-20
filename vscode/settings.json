@@ -9,7 +9,6 @@
   "[html]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  "diffEditor.ignoreTrimWhitespace": false,
   "clang-format.fallbackStyle": "Google",
   "[cpp]": {
     "editor.defaultFormatter": "ms-vscode.cpptools"
@@ -26,11 +25,14 @@
   "editor.formatOnType": true,
   "sync.quietSync": true,
   "C_Cpp.updateChannel": "Insiders",
-"cmake.configureOnOpen": true,
-"C_Cpp.default.intelliSenseMode": "macos-clang-arm64",
+  "cmake.configureOnOpen": true,
+  "C_Cpp.default.intelliSenseMode": "macos-clang-arm64",
   "editor.fontLigatures": true,
   "editor.lineHeight": 1.3,
-  "editor.rulers": [80, 120],
+  "editor.rulers": [
+    80,
+    120
+  ],
   "workbench.tree.renderIndentGuides": "always",
   "editor.fontFamily": "'Cascadia Code', Menlo, Monaco, 'Courier New', monospace",
   "files.watcherExclude": {
@@ -42,5 +44,19 @@
   },
   "go.toolsManagement.autoUpdate": true,
   "workbench.colorTheme": "Catppuccin Mocha",
-  "workbench.iconTheme": "catppuccin-mocha"
+  "workbench.iconTheme": "catppuccin-mocha",
+  "files.associations": {
+    "CODEOWNERS": "plaintext"
+  },
+  "diffEditor.ignoreTrimWhitespace": false,
+  "github.copilot.editor.enableAutoCompletions": true,
+  "[typescript]": {
+    "editor.defaultFormatter": "vscode.typescript-language-features"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "vscode.json-language-features"
+  },
+  "platformio-ide.pioHomeServerHttpPort": 8008,
+  "platformio-ide.pioHomeServerHttpHost": "0.0.0.0",
+  "platformio-ide.disablePIOHomeStartup": true
 }
