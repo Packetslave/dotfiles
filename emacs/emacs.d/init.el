@@ -151,6 +151,14 @@
 (global-set-key "\C-xg" 'magit-status)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; EASY HUGO MODE
+
+(straight-use-package 'easy-hugo)
+(setq easy-hugo-basedir "~/src/sites/incrementaldreams.com/")
+(setq easy-hugo-postdir "content/posts")
+(define-key global-map (kbd "C-c e") 'easy-hugo)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; RANDOM STUFF
 
 ;(setq load-path (add-to-list
@@ -193,9 +201,6 @@
 ;; default window (frame) size
 (add-to-list 'default-frame-alist '(height . 56))
 (add-to-list 'default-frame-alist '(width . 100))
-
-(straight-use-package 'easy-hugo)
-(setq easy-hugo-basedir "~/src/packetslave/")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; CUSTOM
