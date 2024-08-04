@@ -54,12 +54,16 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; THEME
 
-(setq leuven-scale-outline-headlines nil)
-(setq leuven-scale-org-agenda-structure nil)
-(setq leuven-scale-volatile-highlight nil)
+;; (setq leuven-scale-outline-headlines nil)
+;; (setq leuven-scale-org-agenda-structure nil)
+;; (setq leuven-scale-volatile-highlight nil)
 
-(straight-use-package 'leuven-theme)
-(load-theme 'leuven t)
+;; (straight-use-package 'leuven-theme)
+;; (load-theme 'leuven t)
+
+(straight-use-package 'catppuccin-theme)
+(setq catppuccin-flavor 'mocha)
+(load-theme 'catppuccin :no-confirm)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; SELECTRUM narrowing
@@ -225,7 +229,7 @@
 
 (if (eq system-type 'darwin)
     (progn
-      ;(set-face-attribute 'default nil :height (+ 121 121))
+      (set-face-attribute 'default nil :height (+ 100 100))
       (setq mac-option-key-is-meta nil)
       (setq mac-command-key-is-meta t)
       (setq mac-command-modifier 'meta)

@@ -28,6 +28,12 @@
         dest: ~/.p10k.zsh
         state: link
 
+    - name: Create links - zsh config
+      ansible.builtin.file:
+        src: ~/dotfiles/vscode/settings.json
+        dest: "~/Library/Application Support/Code/User/settings.json"
+        state: link
+
     - name: Tap external repositories
       community.general.homebrew_tap:
         name: 
