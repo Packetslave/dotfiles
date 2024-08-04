@@ -54,6 +54,7 @@
           - coreutils
           - ffmpeg
           - go
+          - google-cloud-sdk
           - grpcurl
           - hugo
           - joshmedeski/sesh/sesh
