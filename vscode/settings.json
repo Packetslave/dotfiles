@@ -58,5 +58,6 @@
   },
   "platformio-ide.pioHomeServerHttpPort": 8008,
   "platformio-ide.pioHomeServerHttpHost": "0.0.0.0",
-  "platformio-ide.disablePIOHomeStartup": true
+  "platformio-ide.disablePIOHomeStartup": true,
+  "redhat.telemetry.enabled": false
 }
