@@ -1,0 +1,9 @@
+name: proxy
+root: ~/
+
+windows:
+  - prod-3-d: snooctl proxy --skip-context --cluster=prod-3-d
+  - prod-3-e: snooctl proxy --skip-context --cluster=prod-3-e
+  - gke-prod-1: snooctl proxy --skip-context --cluster=gke-prod-1
+  - prod-util-1: snooctl proxy --skip-context --cluster=prod-util-1
+  - test-4: snooctl proxy --skip-context --cluster=test-4
