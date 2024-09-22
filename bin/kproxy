@@ -1,0 +1,42 @@
+#!/bin/bash
+
+set -Eeuo pipefail
+trap cleanup SIGINT SIGTERM ERR EXIT
+
+script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd -P)
+
+export -n KUBECONFIG
+
+key=$RANDOM
+log=/tmp/kproxy.${key}.log
+
+CLUSTERS="
+    prod-3-d
+    prod-3-e
+    gke-prod-1
+"
+
+cleanup() {
+  trap - SIGINT SIGTERM ERR EXIT
+  rm -f ${log}
+}
+
+function prefix_output {
+    local prefix=$1
+    shift
+
+    "${@}" 2>&1 | while read -r line; do
+        printf "[%s] %s\n" "${prefix}" "${line}"
+    done
+
+    return ${PIPESTATUS[0]}
+}
+
+for i in ${CLUSTERS}; do
+  snooctl proxy --skip-context --cluster=${i} 2>&1 \
+    >> ${log} \
+    &
+  sleep 1
+done
+
+tail -F ${log}

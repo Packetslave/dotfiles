@@ -17,6 +17,16 @@
         dest: ~/.tmux/plugins
         state: link
 
+    - name: Create links - tmuxinator dir
+      ansible.builtin.file:
+        path: ~/.tmuxinator
+        state: directory
+    - name: Create links - tmuxinator configs
+      ansible.builtin.file:
+        src: ~/dotfiles/tmuxinator/proxy.yml
+        dest: ~/.tmuxinator/proxy.yml
+        state: link
+
     - name: Create links - zsh config
       ansible.builtin.file:
         src: ~/dotfiles/zsh/zshrc
@@ -38,9 +48,12 @@
     - name: Tap external repositories
       community.general.homebrew_tap:
         name: 
+          - buildpacks/tap
           - codecrafters-io/tap
           - joshmedeski/sesh
           - noahgorstein/tap
+          - johanhaleby/kubetail
+          - derailed/k9s
 
     - name: Install packages with homebrew
       community.general.homebrew:
@@ -49,22 +62,31 @@
           - abseil
           - ansible
           - bat
+          - bison
+          - buildpacks/tap/pack
+          - clusterctl 
           - codecrafters-io/tap/codecrafters
           - code-server
           - coreutils
           - ffmpeg
+          - git
+          - git-extras
           - go
           - google-cloud-sdk
           - grpcurl
           - hugo
           - joshmedeski/sesh/sesh
           - jq
+          - k3d
+          - k9s
+          - kubetail
           - kind
           - kubernetes-cli
           - neovim
           - noahgorstein/tap/jqp
           - node
           - openjdk
+          - oras
           - pipenv
           - powerlevel10k
           - protobuf
@@ -74,8 +96,12 @@
           - ripgrep
           - rustfmt
           - rustup-init
+          - tfenv
+          - tig
           - tmux
+          - tmuxinator
           - xz
+          - yq
           - yt-dlp
           - zoxide
         state: present
