@@ -1,6 +1,6 @@
 {
   "sync.autoUpload": true,
-  "sync.autoDownload": true,
+
   "sync.gist": "724fbf58b749551bd910e3f9a1d80c9e",
   "livereload.debug": true,
   "[javascript]": {
@@ -44,7 +44,7 @@
   },
   "go.toolsManagement.autoUpdate": true,
   "workbench.colorTheme": "Catppuccin Mocha",
-  "workbench.iconTheme": "catppuccin-mocha",
+  "workbench.iconTheme": "catppuccin-frappe",
   "files.associations": {
     "CODEOWNERS": "plaintext"
   },
@@ -59,5 +59,5 @@
   "platformio-ide.pioHomeServerHttpPort": 8008,
   "platformio-ide.pioHomeServerHttpHost": "0.0.0.0",
   "platformio-ide.disablePIOHomeStartup": true,
-  "redhat.telemetry.enabled": false,
+  "redhat.telemetry.enabled": false
 }

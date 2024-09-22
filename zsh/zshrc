@@ -105,6 +105,13 @@ else
   >&2 "mkdir -p ~/src/external && cd ~/src/external && git clone https://github.com/robbyrussell/oh-my-zsh.git"
 fi
 
+# Why aren't these defined?
+alias dk="docker kill"
+alias dka='docker kill $(docker ps -q)'
+alias dpsl="docker ps -l"
+alias dpsq="docker ps -q"
+alias dpsql="docker ps -ql"
+
 alias a1='awk "{print \$1}"'
 alias a2='awk "{print \$2}"'
 alias a3='awk "{print \$3}"'
@@ -131,6 +138,10 @@ function frg {
 
 alias ap="ansible-playbook ~/dotfiles/ansible/bootstrap.yaml"
 
+func thist() {
+  perl -pe 's/^.+?;//' "$HISTFILE"|sort|uniq -c|sort -rn|head -15
+}
+
 #
 # Local config
 #
@@ -149,3 +160,19 @@ fi
 export AWS_SDK_LOAD_CONFIG=true
 alias gdm=git diff $(git_main_branch)
 export PATH=/usr/class/bin:$PATH
+
+# >>> conda initialize >>>
+# !! Contents within this block are managed by 'conda init' !!
+__conda_setup="$('/opt/anaconda3/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
+if [ $? -eq 0 ]; then
+    eval "$__conda_setup"
+else
+    if [ -f "/opt/anaconda3/etc/profile.d/conda.sh" ]; then
+        . "/opt/anaconda3/etc/profile.d/conda.sh"
+    else
+        export PATH="/opt/anaconda3/bin:$PATH"
+    fi
+fi
+unset __conda_setup
+# <<< conda initialize <<<
+
