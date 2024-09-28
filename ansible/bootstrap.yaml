@@ -55,6 +55,16 @@
           - johanhaleby/kubetail
           - derailed/k9s
 
+    - name: Tap a Homebrew repository using url, state present
+      community.general.homebrew_tap:
+        name: shodan-public/homebrew-shodan
+        url: 'https://gitlab.com/shodan-public/homebrew-shodan'
+
+    - name: Install cask
+      community.general.homebrew_cask:
+        name: git-credential-manager
+        state: present
+
     - name: Install packages with homebrew
       community.general.homebrew:
         name:
@@ -68,7 +78,9 @@
           - codecrafters-io/tap/codecrafters
           - code-server
           - coreutils
+          - doggo
           - ffmpeg
+          - geonet
           - git
           - git-extras
           - go
