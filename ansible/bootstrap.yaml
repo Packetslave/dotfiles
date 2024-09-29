@@ -105,6 +105,7 @@
           - protoc-gen-go
           - protoc-gen-go-grpc
           - pygments
+          - rename
           - ripgrep
           - rustfmt
           - rustup-init
