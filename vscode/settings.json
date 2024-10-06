@@ -1,6 +1,5 @@
 {
   "sync.autoUpload": true,
-
   "sync.gist": "724fbf58b749551bd910e3f9a1d80c9e",
   "livereload.debug": true,
   "[javascript]": {
@@ -44,7 +43,7 @@
   },
   "go.toolsManagement.autoUpdate": true,
   "workbench.colorTheme": "Catppuccin Mocha",
-  "workbench.iconTheme": "catppuccin-frappe",
+  "workbench.iconTheme": "catppuccin-mocha",
   "files.associations": {
     "CODEOWNERS": "plaintext"
   },
