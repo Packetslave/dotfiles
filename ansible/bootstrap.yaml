@@ -44,6 +44,12 @@
         dest: "~/Library/Application Support/Code/User/settings.json"
         state: link
         force: true
+    - name: Create links - vscode keybindings
+      ansible.builtin.file:
+        src: ~/dotfiles/vscode/keybindings.json
+        dest: "~/Library/Application Support/Code/User/keybindings.json"
+        state: link
+        force: true
 
     - name: Tap external repositories
       community.general.homebrew_tap:

@@ -1,0 +1,74 @@
+// Place your key bindings in this file to override the defaultsauto[]
+[
+    {
+        "key": "ctrl+s",
+        "command": "extension.incrementalSearch.forward",
+        "when": "editorTextFocus"
+    },
+    {
+        "key": "ctrl+i",
+        "command": "-extension.incrementalSearch.forward",
+        "when": "editorTextFocus"
+    },
+    {
+        "key": "ctrl+s",
+        "command": "extension.incrementalSearch.forward",
+        "when": "incrementalSearch"
+    },
+    {
+        "key": "ctrl+i",
+        "command": "-extension.incrementalSearch.forward",
+        "when": "incrementalSearch"
+    },
+    {
+        "key": "ctrl+r",
+        "command": "extension.incrementalSearch.backward",
+        "when": "editorTextFocus"
+    },
+    {
+        "key": "ctrl+u",
+        "command": "-extension.incrementalSearch.backward",
+        "when": "editorTextFocus"
+    },
+    {
+        "key": "ctrl+r",
+        "command": "extension.incrementalSearch.backward",
+        "when": "incrementalSearch"
+    },
+    {
+        "key": "ctrl+u",
+        "command": "-extension.incrementalSearch.backward",
+        "when": "incrementalSearch"
+    },
+    {
+        "key": ", .",
+        "command": "editor.action.revealDefinition",
+        "when": "editorTextFocus",
+    },
+    {
+        "key": ", shift+.",
+        "command": "editor.action.revealDefinitionAside",
+        "when": "editorTextFocus",
+    },
+    {
+        "key": ", space",
+        "command": "editor.action.insertSnippet",
+        "when": "editorTextFocus",
+        "args": {
+            "snippet": ", "
+        }
+    },
+    {
+        "key": ", enter",
+        "command": "editor.action.insertSnippet",
+        "when": "editorTextFocus",
+        "args": {
+            "snippet": ", \n"
+        }
+    },
+    {
+        "key": ", w",
+        "command": "whichkey.show",
+        "when": "editorTextFocus"
+    },
+]
