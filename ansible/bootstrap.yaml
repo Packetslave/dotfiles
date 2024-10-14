@@ -115,6 +115,7 @@
           - ripgrep
           - rustfmt
           - rustup-init
+          - stern
           - tfenv
           - tig
           - tmux

@@ -71,4 +71,12 @@
         "command": "whichkey.show",
         "when": "editorTextFocus"
     },
+    {
+        "key": ", ,",
+        "command": "editor.action.insertSnippet",
+        "when": "editorTextFocus",
+        "args": {
+            "snippet": ","
+        }
+    },
 ]
