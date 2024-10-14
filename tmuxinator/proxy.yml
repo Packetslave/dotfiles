@@ -7,3 +7,4 @@ windows:
   - gke-prod-1: snooctl proxy --skip-context --cluster=gke-prod-1
   - prod-util-1: snooctl proxy --skip-context --cluster=prod-util-1
   - test-4: snooctl proxy --skip-context --cluster=test-4
+  - usw2: snooctl proxy --skip-context --cluster=core-prod-usor-aws-1
