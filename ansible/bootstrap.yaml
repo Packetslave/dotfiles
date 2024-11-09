@@ -111,6 +111,7 @@
           - protobuf
           - protoc-gen-go
           - protoc-gen-go-grpc
+          - pv
           - pygments
           - rename
           - ripgrep
