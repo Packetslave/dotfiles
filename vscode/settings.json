@@ -58,5 +58,340 @@
   "platformio-ide.pioHomeServerHttpPort": 8008,
   "platformio-ide.pioHomeServerHttpHost": "0.0.0.0",
   "platformio-ide.disablePIOHomeStartup": true,
-  "redhat.telemetry.enabled": false
+  "redhat.telemetry.enabled": false,
+  "cmake.showOptionsMovedNotification": false,
+  "whichkey.bindings": [
+    {
+      "key": "g",
+      "name": "go",
+      "type": "bindings",
+      "bindings": [
+        {
+          "key": "g",
+          "name": "First line",
+          "type": "command",
+          "command": "cursorTop"
+        },
+        {
+          "key": "l",
+          "name": "Line",
+          "command": "workbench.action.gotoLine"
+        },
+        {
+          "key": "e",
+          "name": "Last line",
+          "type": "command",
+          "command": "cursorBottom"
+        },
+        {
+          "key": "d",
+          "name": "Definition",
+          "type": "command",
+          "command": "editor.action.revealDefinition"
+        },
+        {
+          "key": "D",
+          "name": "Declaration",
+          "type": "command",
+          "command": "editor.action.revealDeclaration"
+        },
+        {
+          "key": "y",
+          "name": "Type definition",
+          "type": "command",
+          "command": "editor.action.goToTypeDefinition"
+        },
+        {
+          "key": "r",
+          "name": "References",
+          "type": "command",
+          "command": "references-view.findReferences"
+        },
+        {
+          "key": "i",
+          "name": "Implementations",
+          "type": "command",
+          "command": "editor.action.goToImplementation"
+        },
+        {
+          "key": "t",
+          "name": "Top of the window",
+          "type": "command",
+          "command": "cursorMove",
+          "args": {
+            "to": "viewPortTop"
+          }
+        },
+        {
+          "key": "c",
+          "name": "Center of the window",
+          "type": "command",
+          "command": "cursorMove",
+          "args": {
+            "to": "viewPortCenter"
+          }
+        },
+        {
+          "key": "b",
+          "name": "Bottom of the window",
+          "type": "command",
+          "command": "cursorMove",
+          "args": {
+            "to": "viewPortBottom"
+          }
+        },
+        {
+          "key": ".",
+          "name": "Last edited",
+          "type": "command",
+          "command": "workbench.action.navigateToLastEditLocation"
+        },
+        {
+          "key": "p",
+          "name": "Parent",
+          "type": "command",
+          "command": "rust-analyzer.parentModule"
+        },
+        {
+          "key": "m",
+          "name": "Manifest",
+          "type": "command",
+          "command": "rust-analyzer.openCargoToml"
+        }
+      ]
+    },
+    {
+      "key": "e",
+      "name": "edit",
+      "type": "bindings",
+      "bindings": [
+        {
+          "key": "f",
+          "name": "Format",
+          "type": "command",
+          "command": "editor.action.formatDocument"
+        },
+        {
+          "key": "w",
+          "name": "Wrap",
+          "type": "command",
+          "command": "rewrap.rewrapComment"
+        },
+        {
+          "key": "l",
+          "name": "LaTeX",
+          "type": "command",
+          "command": "unicode-latex.insertMathSymbol"
+        },
+        {
+          "key": "_",
+          "name": "snake_case",
+          "type": "command",
+          "command": "extension.changeCase.snake"
+        },
+        {
+          "key": "S",
+          "name": "SCREAMING_CASE",
+          "type": "command",
+          "command": "extension.changeCase.constant"
+        },
+        {
+          "key": "c",
+          "name": "camelCase",
+          "type": "command",
+          "command": "extension.changeCase.camel"
+        },
+        {
+          "key": "C",
+          "name": "CamelCase",
+          "type": "command",
+          "command": "extension.changeCase.pascal"
+        },
+        {
+          "key": "r",
+          "name": "Revert",
+          "type": "command",
+          "command": "git.revertSelectedRanges"
+        },
+        {
+          "key": "s",
+          "name": "Sort",
+          "type": "command",
+          "command": "editor.action.sortLinesAscending"
+        },
+        {
+          "key": "a",
+          "name": "Align",
+          "type": "command",
+          "command": "yo1dog.cursor-align.alignCursors"
+        },
+        {
+          "key": "i",
+          "name": "increment",
+          "type": "command",
+          "command": "editor.emmet.action.incrementNumberByOne"
+        },
+        {
+          "key": "d",
+          "name": "decrement",
+          "type": "command",
+          "command": "editor.emmet.action.decrementNumberByOne"
+        },
+        {
+          "key": "p",
+          "name": "pipe to shell",
+          "type": "command",
+          "command": "editWithShell.runCommand"
+        }
+      ]
+    },
+    {
+      "key": "o",
+      "name": "open",
+      "type": "bindings",
+      "bindings": [
+        {
+          "key": "g",
+          "name": "Magit",
+          "type": "command",
+          "command": "runCommands",
+          "args": {
+            "commands": [
+              "workbench.action.closeSidebar",
+              "workbench.action.closePanel",
+              "magit.status"
+            ]
+          }
+        },
+        {
+          "key": "t",
+          "name": "Terminal",
+          "type": "command",
+          "command": "terminal.focus",
+        },
+        {
+          "key": "e",
+          "name": "Explorer",
+          "type": "command",
+          "command": "runCommands",
+          "args": {
+            "commands": [
+              "workbench.action.closePanel",
+              "workbench.files.action.focusFilesExplorer"
+            ]
+          }
+        },
+        {
+          "key": "x",
+          "name": "Extensions",
+          "type": "command",
+          "command": "workbench.extensions.action.installExtensions"
+        },
+        {
+          "key": "s",
+          "name": "Settings",
+          "type": "command",
+          "command": "workbench.action.openSettingsJson"
+        },
+        {
+          "key": "S",
+          "name": "Workspace Settings",
+          "type": "command",
+          "command": "workbench.action.openWorkspaceSettingsFile"
+        },
+        {
+          "key": "k",
+          "name": "Keybindings",
+          "type": "command",
+          "command": "workbench.action.openGlobalKeybindingsFile"
+        }
+      ]
+    },
+    {
+      "key": "n",
+      "name": "next...",
+      "type": "bindings",
+      "bindings": [
+        {
+          "key": "e",
+          "name": "Error",
+          "type": "command",
+          "command": "packetslave.next",
+          "args": [
+            "error"
+          ]
+        },
+        {
+          "key": "c",
+          "name": "Change",
+          "type": "command",
+          "command": "packetslave.next",
+          "args": [
+            "change"
+          ]
+        },
+        {
+          "key": "C",
+          "name": "Merge Conflict",
+          "type": "command",
+          "command": "packetslave.next",
+          "args": [
+            "conflict"
+          ]
+        },
+        {
+          "key": "r",
+          "name": "Reference",
+          "type": "command",
+          "command": "packetslave.next",
+          "args": [
+            "reference"
+          ]
+        },
+        {
+          "key": "f",
+          "name": "Find",
+          "type": "command",
+          "command": "packetslave.next",
+          "args": [
+            "occurrence"
+          ]
+        },
+        {
+          "key": ".",
+          "name": "Edit",
+          "type": "command",
+          "command": "packetslave.next",
+          "args": [
+            "edit"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "m",
+      "name": "misc",
+      "type": "bindings",
+      "bindings": [
+        {
+          "key": "h",
+          "name": "Hover",
+          "type": "command",
+          "command": "editor.action.showHover"
+        },
+        {
+          "key": "a",
+          "name": "Argument Hints",
+          "type": "command",
+          "command": "editor.action.triggerParameterHints"
+        },
+        {
+          "key": "d",
+          "name": "Diff",
+          "type": "command",
+          "command": "editor.action.dirtydiff.next"
+        },
+      ]
+    },
+  ],
 }

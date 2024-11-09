@@ -79,4 +79,26 @@
             "snippet": ","
         }
     },
+    {
+        "key": ", n",
+        "command": "runCommands",
+        "when": "editorTextFocus",
+        "args": {
+            "commands": [
+                "whichkey.show",
+                {
+                    "command": "whichkey.triggerKey",
+                    "args": "n"
+                }
+            ]
+        }
+    },
+    {
+        "key": "ctrl+n",
+        "command": "packetslave.next"
+    },
+    {
+        "key": "ctrl+p",
+        "command": "packetslave.prev"
+    },
 ]
