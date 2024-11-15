@@ -43,7 +43,7 @@
   },
   "go.toolsManagement.autoUpdate": true,
   "workbench.colorTheme": "Catppuccin Mocha",
-  "workbench.iconTheme": "catppuccin-frappe",
+  "workbench.iconTheme": "catppuccin-mocha",
   "files.associations": {
     "CODEOWNERS": "plaintext"
   },
