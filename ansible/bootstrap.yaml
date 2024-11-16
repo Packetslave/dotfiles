@@ -102,6 +102,7 @@
           - kind
           - kubernetes-cli
           - neovim
+          - nmap
           - noahgorstein/tap/jqp
           - node
           - openjdk
