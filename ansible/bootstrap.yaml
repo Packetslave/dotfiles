@@ -38,6 +38,12 @@
         dest: ~/.p10k.zsh
         state: link
 
+    - name: Create links - gitconfig
+      ansible.builtin.file:
+        src: ~/dotfiles/gitconfig/gitconfig
+        dest: ~/.gitconfig
+        state: link
+
     - name: Create links - vscode
       ansible.builtin.file:
         src: ~/dotfiles/vscode/settings.json
