@@ -84,6 +84,7 @@
           - abseil
           - ansible
           - bat
+          - bat-extras
           - bison
           - buildpacks/tap/pack
           - clusterctl 
@@ -91,6 +92,7 @@
           - code-server
           - coreutils
           - doggo
+          - eza
           - ffmpeg
           - geonet
           - git
@@ -107,6 +109,7 @@
           - kubetail
           - kind
           - kubernetes-cli
+          - lsd
           - neovim
           - nmap
           - noahgorstein/tap/jqp

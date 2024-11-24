@@ -118,6 +118,7 @@ alias a3='awk "{print \$3}"'
 alias a4='awk "{print \$4}"'
 
 unalias md
+
 function md() {
   mkdir $1 && cd $1
 }
@@ -142,13 +143,25 @@ func thist() {
   perl -pe 's/^.+?;//' "$HISTFILE"|sort|uniq -c|sort -rn|head -15
 }
 
-#
-# Local config
-#
+export HOMEBREW_AUTO_UPDATE_SECS=86400
 
-if [[ -f $HOME/.zshrc.after ]] ; then
-  . $HOME/.zshrc.after
-fi
+alias ls="EZA_COLORS='da=36' eza --time-style=relative --color-scale=age"
+alias lsa="ls --almost-all" # ignore . ..
+alias l="ls --long --classify=always" # show file indicators
+alias la="l --almost-all"
+alias ltreea="ls --tree"
+alias ltree="ltreea --level=2"
+alias lt="ls --long --sort=time --color-scale=age" # Use green for color aging
+alias lta="lt --almost-all"
+# lsd is faster than eza
+alias lss="lsd --long --total-size --sort=size --reverse"
+alias lssa="lss --almost-all"
+
+export PAGER=bat
+export export MANPAGER="sh -c 'col -bx | bat -l man -p'"
+export BAT_THEME="Solarized (light)"
+
+alias rg=batgrep
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
@@ -175,4 +188,13 @@ else
 fi
 unset __conda_setup
 # <<< conda initialize <<<
+
+#
+# Local config
+#
+
+if [[ -f $HOME/.zshrc.after ]] ; then
+  . $HOME/.zshrc.after
+fi
+
 
