@@ -45,10 +45,9 @@
         state: link
 
     - name: Create links - gitconfig
-      ansible.builtin.file:
+      ansible.builtin.template:
         src: ~/dotfiles/gitconfig/gitconfig
         dest: ~/.gitconfig
-        state: link
 
     - name: Create links - vscode
       ansible.builtin.file:

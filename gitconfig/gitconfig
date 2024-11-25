@@ -1,12 +1,19 @@
+{% set email = "brian.landers@reddit.com" if (ansible_user_id == "brian.landers") else "brian@packetslave.com" %}
 [user]
 	name = Brian Landers
-	email = brian@packetslave.com
+    email = {{ email }}
+
+[url "git@github.snooguts.net:"]
+   insteadOf = https://github.snooguts.net/
+
 [pull]
+
 [credential]
-	helper = 
 	helper = /usr/local/share/gcm-core/git-credential-manager
+
 [credential "https://dev.azure.com"]
 	useHttpPath = true
+
 [core]
     pager = delta
 
