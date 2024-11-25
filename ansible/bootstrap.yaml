@@ -27,6 +27,12 @@
         dest: ~/.tmuxinator/proxy.yml
         state: link
 
+    - name: Create links - eza configs
+      ansible.builtin.file:
+        src: ~/dotfiles/eza
+        dest: ~/.config/eza
+        state: link
+
     - name: Create links - zsh config
       ansible.builtin.file:
         src: ~/dotfiles/zsh/zshrc
