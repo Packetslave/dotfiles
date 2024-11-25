@@ -3,6 +3,9 @@
 	name = Brian Landers
     email = {{ email }}
 
+[include]
+    path = {{ lookup('env', 'HOME') }}/dotfiles/gitconfig/themes.gitconfig
+
 [url "git@github.snooguts.net:"]
    insteadOf = https://github.snooguts.net/
 

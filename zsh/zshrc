@@ -147,20 +147,17 @@ export HOMEBREW_AUTO_UPDATE_SECS=86400
 
 alias ls="EZA_COLORS='da=36' eza --time-style=relative --color-scale=age"
 alias lsa="ls --almost-all" # ignore . ..
-alias l="ls --long --classify=always" # show file indicators
+alias lsc="ls --color=always"
+alias l="ls --color=always --long --classify=always" # show file indicators
 alias la="l --almost-all"
-alias ltreea="ls --tree"
+alias ltreea="ls --tree --color=always"
 alias ltree="ltreea --level=2"
 alias lt="ls --long --sort=time --color-scale=age" # Use green for color aging
 alias lta="lt --almost-all"
+alias lg="eza --grid --long"
 # lsd is faster than eza
 alias lss="lsd --long --total-size --sort=size --reverse"
 alias lssa="lss --almost-all"
-
-export PAGER=bat
-export export MANPAGER="sh -c 'col -bx | bat -l man -p'"
-export BAT_THEME="Solarized (light)"
-
 alias rg=batgrep
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
