@@ -106,6 +106,7 @@
           - coreutils
           - doggo
           - eza
+          - fd
           - ffmpeg
           - fzf
           - geonet
