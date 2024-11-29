@@ -27,6 +27,10 @@
         dest: ~/.tmuxinator/proxy.yml
         state: link
 
+    - name: Create links - config dir
+      ansible.builtin.file:
+        path: ~/.config
+        state: directory
     - name: Create links - eza configs
       ansible.builtin.file:
         src: ~/dotfiles/eza
@@ -49,6 +53,10 @@
         src: ~/dotfiles/gitconfig/gitconfig
         dest: ~/.gitconfig
 
+    - name: Create links - vscode dir
+      ansible.builtin.file:
+        path: "~/Library/Application Support/Code/User/"
+        state: directory
     - name: Create links - vscode
       ansible.builtin.file:
         src: ~/dotfiles/vscode/settings.json
@@ -99,6 +107,7 @@
           - doggo
           - eza
           - ffmpeg
+          - fzf
           - geonet
           - git
           - git-delta
