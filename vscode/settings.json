@@ -45,7 +45,8 @@
   "workbench.colorTheme": "Catppuccin Mocha",
   "workbench.iconTheme": "catppuccin-mocha",
   "files.associations": {
-    "CODEOWNERS": "plaintext"
+    "CODEOWNERS": "plaintext",
+    "*.gotemplate": "gotmpl"
   },
   "diffEditor.ignoreTrimWhitespace": false,
   "github.copilot.editor.enableAutoCompletions": true,
