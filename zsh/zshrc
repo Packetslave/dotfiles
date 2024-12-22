@@ -186,6 +186,9 @@ fi
 unset __conda_setup
 # <<< conda initialize <<<
 
+alias dg="doggo --strategy=random --time"
+func dj() { dg --json "$@" | jq -C . }
+
 #
 # Local config
 #
