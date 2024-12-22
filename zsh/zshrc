@@ -195,3 +195,7 @@ if [[ -f $HOME/.zshrc.after ]] ; then
 fi
 
 
+eval "$(atuin init zsh)"
+
+eval "$(rbenv init - --no-rehash zsh)"
+
