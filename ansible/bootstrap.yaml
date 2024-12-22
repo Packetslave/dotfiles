@@ -120,7 +120,6 @@
           - git
           - git-delta
           - git-extras
-          - go
           - google-cloud-sdk
           - grpcurl
           - hugo
