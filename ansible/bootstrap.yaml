@@ -11,6 +11,11 @@
         src: ~/dotfiles/tmux/tmux.conf
         dest: ~/.tmux.conf
         state: link
+    - name: Create links - tmuxline
+      ansible.builtin.file:
+        src: ~/dotfiles/tmux/tmuxline
+        dest: ~/.tmuxline
+        state: link
     - name: Create links - tmux plugins
       ansible.builtin.file:
         src: ~/dotfiles/tmux/plugins
