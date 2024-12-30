@@ -200,7 +200,7 @@ if [[ -f $HOME/.zshrc.after ]] ; then
 fi
 
 
-eval "$(atuin init zsh --disable-up-arrow)"
+type atuin &> /dev/null && eval "$(atuin init zsh --disable-up-arrow)"
 
-eval "$(rbenv init - --no-rehash zsh)"
+type rbenv &> /dev/null && eval "$(rbenv init - --no-rehash zsh)"
 
