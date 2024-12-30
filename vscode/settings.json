@@ -395,4 +395,5 @@
       ]
     },
   ],
+  "files.trimTrailingWhitespace": true
 }
