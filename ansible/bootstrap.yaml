@@ -42,11 +42,24 @@
         dest: ~/.config/atuin/config.toml
         state: link
         force: true
+
     - name: Create links - eza configs
       ansible.builtin.file:
         src: ~/dotfiles/eza
         dest: ~/.config/eza
         state: link
+
+    - name: Create links - ghostty config dir
+      ansible.builtin.file:
+        path: ~/.config/ghostty
+        state: directory
+
+    - name: Create links - ghostty configs
+      ansible.builtin.file:
+        src: ~/dotfiles/ghostty/config
+        dest: ~/.config/ghostty/config
+        state: link
+        force: true
 
     - name: Create links - zsh config
       ansible.builtin.file:
@@ -83,7 +96,7 @@
 
     - name: Tap external repositories
       community.general.homebrew_tap:
-        name: 
+        name:
           - buildpacks/tap
           - codecrafters-io/tap
           - joshmedeski/sesh
@@ -112,7 +125,7 @@
           - bat-extras
           - bison
           - buildpacks/tap/pack
-          - clusterctl 
+          - clusterctl
           - codecrafters-io/tap/codecrafters
           - code-server
           - coreutils

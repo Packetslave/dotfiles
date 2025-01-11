@@ -1,0 +1,5 @@
+macos-titlebar-style = hidden
+cursor-invert-fg-bg = true
+minimum-contrast = 1.05
+mouse-hide-while-typing = true
+
