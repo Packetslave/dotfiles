@@ -191,6 +191,8 @@ unset __conda_setup
 alias dg="doggo --strategy=random --time"
 func dj() { dg --json "$@" | jq -C . }
 
+alias gotv="got -v"
+
 #
 # Local config
 #
