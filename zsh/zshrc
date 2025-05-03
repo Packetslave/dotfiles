@@ -26,7 +26,7 @@ fi
 
 #
 # History configs
-# 
+#
 
 HISTSIZE=500000
 SAVEHIST=5000000
@@ -44,7 +44,7 @@ setopt SHARE_HISTORY
 #
 function add_path() {
   if [[ -z "$1" ]] ; then
-    return 
+    return
   fi
   if [[ -d "$1" ]] ; then
     export PATH="$1":$PATH
@@ -190,6 +190,8 @@ unset __conda_setup
 
 alias dg="doggo --strategy=random --time"
 func dj() { dg --json "$@" | jq -C . }
+
+alias gotv="got -v"
 
 function node4pod { kubectl get node -o json $(kgp $1 --no-headers -o custom-columns=NODE:.spec.nodeName) }
 
