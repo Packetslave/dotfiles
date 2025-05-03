@@ -111,7 +111,10 @@
 
     - name: Install cask
       community.general.homebrew_cask:
-        name: git-credential-manager
+        name: 
+          - git-credential-manager
+          - mouseless
+          - nikitabobko/tap/aerospace
         state: present
 
     - name: Install packages with homebrew
@@ -148,6 +151,7 @@
           - kubetail
           - kind
           - kubernetes-cli
+          - lazydocker
           - lsd
           - neovim
           - nmap
