@@ -99,10 +99,7 @@
         name:
           - buildpacks/tap
           - codecrafters-io/tap
-          - joshmedeski/sesh
           - noahgorstein/tap
-          - johanhaleby/kubetail
-          - derailed/k9s
 
     - name: Tap a Homebrew repository using url, state present
       community.general.homebrew_tap:
@@ -111,7 +108,7 @@
 
     - name: Install cask
       community.general.homebrew_cask:
-        name: 
+        name:
           - git-credential-manager
           - mouseless
           - nikitabobko/tap/aerospace
@@ -144,13 +141,13 @@
           - google-cloud-sdk
           - grpcurl
           - hugo
-          - joshmedeski/sesh/sesh
           - jq
           - k3d
           - k9s
           - kubetail
           - kind
           - kubernetes-cli
+          - kubetail
           - lazydocker
           - lsd
           - neovim
@@ -169,8 +166,8 @@
           - pygments
           - rename
           - ripgrep
-          - rustfmt
-          - rustup-init
+          - rustup
+          - sesh
           - stern
           - superfile
           - tfenv
