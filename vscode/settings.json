@@ -42,8 +42,8 @@
     "**/.terragrunt": true
   },
   "go.toolsManagement.autoUpdate": true,
-  "workbench.colorTheme": "Catppuccin Mocha",
-  "workbench.iconTheme": "catppuccin-mocha",
+  "workbench.colorTheme": "Catppuccin Frappé",
+  "workbench.iconTheme": "catppuccin-frappe",
   "files.associations": {
     "CODEOWNERS": "plaintext",
     "*.gotemplate": "gotmpl"
@@ -395,5 +395,6 @@
       ]
     },
   ],
-  "files.trimTrailingWhitespace": true
+  "files.trimTrailingWhitespace": true,
+  "makefile.configureOnOpen": false
 }

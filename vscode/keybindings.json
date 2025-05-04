@@ -101,4 +101,12 @@
         "key": "ctrl+p",
         "command": "packetslave.prev"
     },
+    {
+        "key": "cmd+j",
+        "command": "extension.aceJump"
+    },
+    {
+        "key": "shift+cmd+j",
+        "command": "extension.aceJump.line"
+    },
 ]
