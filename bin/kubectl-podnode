@@ -1,0 +1,4 @@
+#!/bin/sh
+
+kubectl get node -o json $(kubectl get pod $1 --no-headers -o custom-columns=NODE:.spec.nodeName)
+
