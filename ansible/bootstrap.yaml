@@ -43,6 +43,12 @@
         state: link
         force: true
 
+    - name: Create links - dig configs
+      ansible.builtin.file:
+        src: ~/dotfiles/dig/digrc
+        dest: ~/.digrc
+        state: link
+
     - name: Create links - eza configs
       ansible.builtin.file:
         src: ~/dotfiles/eza
