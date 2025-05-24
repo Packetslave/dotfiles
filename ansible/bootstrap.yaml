@@ -22,6 +22,22 @@
         dest: ~/.tmux/plugins
         state: link
 
+    - name: check the current emacs.d symlink
+      stat: path=~/.emacs.d
+      register: emacsd_available
+
+    - name: remove the emacs.d folder (only if it is a folder)
+      file:
+        path: ~/.emacs.d
+        state: absent
+      when: emacsd_available.stat.isdir is defined and emacsd_available.stat.isdir
+
+    - name: Create links - emacs dir
+      ansible.builtin.file:
+        path: ~/.emacs.d
+        state: link
+        src: ~/dotfiles/emacs/emacs.d
+
     - name: Create links - tmuxinator dir
       ansible.builtin.file:
         path: ~/.tmuxinator
