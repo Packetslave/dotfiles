@@ -86,6 +86,7 @@ function freq () {
 if [[ -d "$HOME/src/external/oh-my-zsh" ]] ; then
   export ZSH=$HOME/src/external/oh-my-zsh
   plugins=(
+    autoenv
     brew
     colored-man-pages
     colorize
