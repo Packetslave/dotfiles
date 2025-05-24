@@ -396,5 +396,6 @@
     },
   ],
   "files.trimTrailingWhitespace": true,
-  "makefile.configureOnOpen": false
+  "makefile.configureOnOpen": false,
+  "go.lintOnSave": "workspace"
 }
