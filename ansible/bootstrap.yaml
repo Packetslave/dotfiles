@@ -131,6 +131,7 @@
     - name: Install cask
       community.general.homebrew_cask:
         name:
+          - choosy
           - git-credential-manager
           - mouseless
           - nikitabobko/tap/aerospace
