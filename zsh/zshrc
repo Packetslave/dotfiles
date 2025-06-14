@@ -216,6 +216,8 @@ function gdcb() {
     fi
 }
 
+unalias rg
+
 #
 # Local config
 #
