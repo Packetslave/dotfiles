@@ -48,7 +48,7 @@
     "CODEOWNERS": "plaintext",
     "*.gotemplate": "gotmpl"
   },
-  "diffEditor.ignoreTrimWhitespace": false,
+  "diffEditor.ignoreTrimWhitespace": true,
   "github.copilot.editor.enableAutoCompletions": true,
   "[typescript]": {
     "editor.defaultFormatter": "vscode.typescript-language-features"
@@ -397,5 +397,14 @@
   ],
   "files.trimTrailingWhitespace": true,
   "makefile.configureOnOpen": false,
-  "go.lintOnSave": "workspace"
+  "go.lintOnSave": "workspace",
+  "git.blame.editorDecoration.enabled": true,
+  "git.branchPrefix": "landers/",
+  "git.branchProtection": [
+    "main",
+    "master"
+  ],
+  "git.enableStatusBarSync": false,
+  "git.rebaseWhenSync": true,
+  "python.analysis.typeCheckingMode": "standard"
 }

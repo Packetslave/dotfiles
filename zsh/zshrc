@@ -208,7 +208,7 @@ function mdg()
     done
 }
 
-function gdcb() { 
+function gdcb() {
     if [[ "$(git_current_branch)" != "$(git_main_branch)" ]] ; then
         local b=$(git_current_branch);                                                                              ─╯
         git checkout $(git_main_branch)
@@ -217,6 +217,10 @@ function gdcb() {
 }
 
 unalias rg
+
+unalias gdw
+alias gdw="gd -w"
+alias utc="date -z UTC"
 
 #
 # Local config
