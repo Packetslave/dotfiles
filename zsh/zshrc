@@ -85,6 +85,7 @@ function freq () {
 #
 if [[ -d "$HOME/src/external/oh-my-zsh" ]] ; then
   export ZSH=$HOME/src/external/oh-my-zsh
+  export AUTOENV_ENABLE_LEAVE=1
   plugins=(
     autoenv
     brew
