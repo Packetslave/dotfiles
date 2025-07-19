@@ -42,7 +42,6 @@
     "**/.terragrunt": true
   },
   "go.toolsManagement.autoUpdate": true,
-  "workbench.colorTheme": "Catppuccin Frappé",
   "workbench.iconTheme": "catppuccin-frappe",
   "files.associations": {
     "CODEOWNERS": "plaintext",
@@ -406,5 +405,14 @@
   ],
   "git.enableStatusBarSync": false,
   "git.rebaseWhenSync": true,
-  "python.analysis.typeCheckingMode": "standard"
+  "python.analysis.typeCheckingMode": "standard",
+  "github.copilot.nextEditSuggestions.enabled": true,
+  "github.copilot.enable": {
+    "*": false,
+    "plaintext": false,
+    "markdown": false,
+    "scminput": false
+  },
+  "docker.extension.enableComposeLanguageServer": false,
+  "workbench.colorTheme": "Solarized Dark"
 }
