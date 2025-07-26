@@ -222,6 +222,7 @@ unalias rg
 unalias gdw
 alias gdw="gd -w"
 alias utc="date -z UTC"
+alias buu="brew update && brew upgrade"
 
 #
 # Local config
