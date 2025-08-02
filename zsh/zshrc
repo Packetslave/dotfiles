@@ -239,3 +239,5 @@ type atuin &> /dev/null && eval "$(atuin init zsh --disable-up-arrow)"
 
 type rbenv &> /dev/null && eval "$(rbenv init - --no-rehash zsh)"
 
+
+alias claude="/Users/blanders/.claude/local/claude"
