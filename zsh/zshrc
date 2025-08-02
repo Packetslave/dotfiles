@@ -224,6 +224,8 @@ alias gdw="gd -w"
 alias utc="date -z UTC"
 alias buu="brew update && brew upgrade"
 
+function git-rotate() { git branch -D $1 && gcb $1 }
+
 #
 # Local config
 #
