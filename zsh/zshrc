@@ -56,12 +56,20 @@ function add_path() {
 
 function s2c { tr ' ' ',' }
 function s2n { tr ' ' '\n' }
+function s2  { tr -d ' ' }
 
 function c2s { tr ',' ' ' }
 function c2n { tr ',' '\n' }
+function c2  { tr -d ',' }
 
 function n2c { tr '\n' ',' }
 function n2s { tr '\n' ' ' }
+function n2  { tr -d '\n' }
+
+function noblank { awk NF }
+
+function dq { perl -pe 's/(.+)/"$1"/' }
+function sq { dq | tr '"' "'" }
 
 function minus1 { sed -e 's/.$//' }
 
@@ -225,6 +233,10 @@ alias utc="date -z UTC"
 alias buu="brew update && brew upgrade"
 
 function git-rotate() { git branch -D $1 && gcb $1 }
+
+t2 () {
+  column -t 
+}
 
 #
 # Local config
