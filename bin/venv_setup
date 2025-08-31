@@ -1,0 +1,131 @@
+#!/bin/bash
+
+## Usage: ./python_venv_setup.sh
+## Author(s): preston.tran, namit.chaturvedi
+##
+## This script provides an easy way to create Python
+## virtual environments using pyenv-virtualenv. It
+## also creates useful shell aliases to activate and 
+## deactivate these virtual environments. This script
+## can optionally install Jupyter Lab in these virtual
+## environments and make the corresponding kernels
+## available in the notebooks.
+
+# Deactivate any existing virtual environments
+conda deactivate 2>/dev/null
+deactivate 2>/dev/null
+pyenv deactivate 2>/dev/null
+
+# Check if pyenv has been installed
+if command -v pyenv >/dev/null 2>&1; then
+    echo "pyenv is installed."
+else
+    echo "Please brew install pyenv"
+    exit 2
+fi
+
+# Check if pyenv-virtualenv has been installed
+if pyenv commands | grep virtualenv; then
+    echo "pyenv-virtualenv is installed."
+else
+    echo "Please brew install pyenv-virtualenv"
+    exit 2
+fi
+
+zshrc="${HOME}/.zshrc"
+echo -e "\n" >> $zshrc
+
+# Add pyenv init into zshrc profile
+if grep -Fxq "pyenv init" $zshrc; then
+    echo "Init script in zshrc"
+else
+    echo 'eval "$(pyenv init -)"' >> $zshrc
+fi
+
+# Add deactivate command to zshrc
+if grep -Fxq 'alias deactivate="pyenv deactivate"' $zshrc; then
+    echo "Deactivate alias in zshrc"
+else
+    echo 'alias deactivate="pyenv deactivate"' >> $zshrc
+fi
+
+eval "$(pyenv init -)"
+# Check pyenv has python 3.10 installed for it's available python versions
+if pyenv versions --bare | grep -q "^3.10"; then
+    echo "Python 3.10 is installed in pyenv."
+else
+    echo "Python 3.10 is not installed in pyenv. Installing python 3.10"
+    pyenv install 3.10
+fi
+
+# Wait for user to enter environment name
+while true; do
+    echo ""
+    read -p "Enter the name of the virtual environment you want to create: " venv_name
+    # Trim leading/trailing whitespace and check if the input is not empty
+    if [[ -n "${venv_name// }" ]]; then
+        break
+    else
+        echo "You must enter a valid virtual environment name."
+    fi
+done
+
+# Check if virtual environment exists
+if pyenv virtualenvs --bare | grep -q "^$venv_name$"; then
+    echo "The virtual environment '$venv_name' already exists."
+    exit 2
+else
+    echo "Creating new virtual environment: $venv_name"
+fi
+
+# Creating the virtual environment
+pyenv virtualenv 3.10 $venv_name
+
+# Activate virtual environment
+pyenv activate $venv_name
+
+# Ask if the user would like to install Jupyter Lab
+while true; do
+    echo ""
+    read -p "Would you like to install Jupyter Lab in this environment? (y/n): " install_jupyter
+    case $install_jupyter in
+        [Yy]* ) 
+            pip install --no-input jupyterlab
+            pip install --no-input ipykernel
+            ipython kernel install --user --name=$venv_name
+            echo "Jupyter Lab has been installed in the virtual environment '$venv_name'."
+            break
+            ;;
+        [Nn]* )
+            echo "Jupyter Lab installation skipped."
+            break
+            ;;
+        * )
+            echo "Please answer yes (y) or no (n)."
+            ;;
+    esac
+done
+
+# Deactivate virtual environment
+pyenv deactivate
+
+# Add alias to zshrc file for user
+alias_name="alias activate_$venv_name='pyenv activate $venv_name'"
+
+if grep -Fxq "$alias_name" $zshrc; then
+    echo "Alias already in .zshrc"
+else
+    echo "$alias_name" >> $zshrc
+    echo "Creating alias: $alias_name"
+    echo "Adding alias to your .zshrc file."
+fi
+
+# Add separation for output
+echo ""
+echo ""
+
+# Output success and instructions
+echo "Successfully installed."
+echo "Use 'deactivate' to exit a virtual environment."
+echo "You can activate your virtual environment using the alias."
+echo "To see list of all available aliases, type 'alias' in terminal"

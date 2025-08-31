@@ -253,3 +253,8 @@ type rbenv &> /dev/null && eval "$(rbenv init - --no-rehash zsh)"
 
 
 alias claude="/Users/blanders/.claude/local/claude"
+
+
+eval "$(pyenv init -)"
+alias deactivate="pyenv deactivate"
+alias activate_nb='pyenv activate nb'
