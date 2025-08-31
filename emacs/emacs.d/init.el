@@ -158,7 +158,7 @@
 ;;;; EASY HUGO MODE
 
 (straight-use-package 'easy-hugo)
-(setq easy-hugo-basedir "~/src/sites/incrementaldreams.com/")
+(setq easy-hugo-basedir "~/src/synced/sites/incrementaldreams.com/")
 (setq easy-hugo-postdir "content/posts")
 (define-key global-map (kbd "C-c e") 'easy-hugo)
 
