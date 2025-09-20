@@ -1,4 +1,4 @@
-if [[ "$TERM_PROGRAM" != "vscode" ]] ; then
+if [[ ! -n "${CURSOR_AGENT}" && "$TERM_PROGRAM" != "vscode" ]] ; then
   source /opt/homebrew/share/powerlevel10k/powerlevel10k.zsh-theme
 fi
 
@@ -6,8 +6,10 @@ fi
 # Initialization code that may require console input (password prompts, [y/n]
 # confirmations, etc.) must go above this block; everything else may go below.
 
-if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
-  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+if [[ ! -n "${CURSOR_AGENT}" ]] ; then
+  if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+    source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+  fi
 fi
 
 #
@@ -115,7 +117,7 @@ if [[ -d "$HOME/src/external/oh-my-zsh" ]] ; then
   )
 
   # Set Oh My Zsh theme conditionally
-  if [[ "$TERM_PROGRAM" == "vscode" ]]; then
+  if [[ -n "${CURSOR_AGENT}" || "$TERM_PROGRAM" == "vscode" ]]; then
     ZSH_THEME=""  # Disable Powerlevel10k for Cursor
   else
     ZSH_THEME="powerlevel10k/powerlevel10k"
@@ -185,7 +187,7 @@ alias lssa="lss --almost-all"
 alias rg=batgrep
 
 # Use a minimal prompt in Cursor to avoid command detection issues
-if [[ "$TERM_PROGRAM" == "vscode" ]]; then
+if [[ "$TERM_PROGRAM" == "vscode" || -n "$CURSOR_AGENT" ]]; then
   PROMPT='%n@%m:%~%# '
   RPROMPT=''
 else
@@ -275,6 +277,7 @@ alias claude="/Users/blanders/.claude/local/claude"
 eval "$(pyenv init -)"
 alias deactivate="pyenv deactivate"
 alias activate_nb='pyenv activate nb'
+
 
 # Added by LM Studio CLI (lms)
 export PATH="$PATH:/Users/blanders/.lmstudio/bin"
