@@ -98,6 +98,12 @@ function freq () {
 if [[ -d "$HOME/src/external/oh-my-zsh" ]] ; then
   export ZSH=$HOME/src/external/oh-my-zsh
   export AUTOENV_ENABLE_LEAVE=1
+  # Fix autoenv parameter issue
+  if [[ -n "$AUTOENV_ENABLE_LEAVE" ]]; then
+      __autoenv_has_builtin() {
+          builtin "$@" 2>/dev/null
+      }
+  fi
   plugins=(
     autoenv
     brew
@@ -272,8 +278,6 @@ type rbenv &> /dev/null && eval "$(rbenv init - --no-rehash zsh)"
 
 [[ "$TERM_PROGRAM" == "vscode" ]] && . "$(code --locate-shell-integration-path zsh --user-data-dir='.' --no-sandbox)"
 
-alias claude="/Users/blanders/.claude/local/claude"
-
 eval "$(pyenv init -)"
 alias deactivate="pyenv deactivate"
 alias activate_nb='pyenv activate nb'
@@ -282,3 +286,4 @@ alias activate_nb='pyenv activate nb'
 # Added by LM Studio CLI (lms)
 export PATH="$PATH:/Users/blanders/.lmstudio/bin"
 # End of LM Studio CLI section
+
