@@ -108,9 +108,5 @@
     {
         "key": "shift+cmd+j",
         "command": "extension.aceJump.line"
-    },
-    {
-        "key": "cmd+e",
-        "command": "composerMode.background"
-    },
+    }
 ]
