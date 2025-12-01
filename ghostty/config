@@ -1,4 +1,3 @@
-macos-titlebar-style = hidden
 copy-on-select = true
 cursor-invert-fg-bg = true
 minimum-contrast = 1.05
@@ -6,3 +5,12 @@ mouse-hide-while-typing = true
 
 keybind = cmd+b=esc:b
 keybind = cmd+f=esc:f
+
+font-family = "CaskaydiaCove NFM Regular"
+font-size = 15
+
+theme = "Nord"
+background = "#000000"
+
+window-width = 120
+window-height = 42

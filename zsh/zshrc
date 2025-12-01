@@ -287,3 +287,5 @@ alias activate_nb='pyenv activate nb'
 export PATH="$PATH:/Users/blanders/.lmstudio/bin"
 # End of LM Studio CLI section
 
+export NVM_DIR="$HOME/.nvm"
+[ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && \. "/opt/homebrew/opt/nvm/nvm.sh"  # This loads nvm
