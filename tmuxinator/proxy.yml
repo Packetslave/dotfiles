@@ -4,9 +4,6 @@ root: ~/
 windows:
   - prod-3-d: rsleep && snooctl proxy --skip-context --cluster=prod-3-d
   - prod-3-e: rsleep && snooctl proxy --skip-context --cluster=prod-3-e
-  - gke-prod-1: rsleep && snooctl proxy --skip-context --cluster=gke-prod-1
   - prod-util-1: rsleep && snooctl proxy --skip-context --cluster=prod-util-1
-  - test-4: rsleep && snooctl proxy --skip-context --cluster=test-4
   - usw2: rsleep && snooctl proxy --skip-context --cluster=core-prod-usor-aws-1
   - r2-1: rsleep && snooctl proxy --skip-context --cluster=prod-r2-1
-  - r2-2: rsleep && snooctl proxy --skip-context --cluster=prod-r2-2

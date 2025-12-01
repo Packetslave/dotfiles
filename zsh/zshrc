@@ -1,3 +1,6 @@
+#!/usr/bin/env zsh
+# shellcheck shell=bash disable=SC2296,SC2034
+
 if [[ ! -n "${CURSOR_AGENT}" && "$TERM_PROGRAM" != "vscode" ]] ; then
   source /opt/homebrew/share/powerlevel10k/powerlevel10k.zsh-theme
 fi
@@ -58,24 +61,24 @@ function add_path() {
 # Functions
 #
 
-function s2c { tr ' ' ',' }
-function s2n { tr ' ' '\n' }
-function s2  { tr -d ' ' }
+function s2c { tr ' ' ',' ; }
+function s2n { tr ' ' '\n' ; }
+function s2  { tr -d ' ' ; }
 
-function c2s { tr ',' ' ' }
-function c2n { tr ',' '\n' }
-function c2  { tr -d ',' }
+function c2s { tr ',' ' ' ; }
+function c2n { tr ',' '\n' ; }
+function c2  { tr -d ',' ; }
 
-function n2c { tr '\n' ',' }
-function n2s { tr '\n' ' ' }
-function n2  { tr -d '\n' }
+function n2c { tr '\n' ',' ; }
+function n2s { tr '\n' ' ' ; }
+function n2  { tr -d '\n' ; }
 
-function noblank { awk NF }
+function noblank { awk NF ; }
 
-function dq { perl -pe 's/(.+)/"$1"/' }
-function sq { dq | tr '"' "'" }
+function dq { perl -pe 's/(.+)/"$1"/' ; }
+function sq { dq | tr '"' "'" ; }
 
-function minus1 { sed -e 's/.$//' }
+function minus1 { sed -e 's/.$//' ; }
 
 function device_for_path ()
 {
@@ -97,15 +100,7 @@ function freq () {
 #
 if [[ -d "$HOME/src/external/oh-my-zsh" ]] ; then
   export ZSH=$HOME/src/external/oh-my-zsh
-  export AUTOENV_ENABLE_LEAVE=1
-  # Fix autoenv parameter issue
-  if [[ -n "$AUTOENV_ENABLE_LEAVE" ]]; then
-      __autoenv_has_builtin() {
-          builtin "$@" 2>/dev/null
-      }
-  fi
   plugins=(
-    autoenv
     brew
     colored-man-pages
     colorize
@@ -144,10 +139,10 @@ alias dpsl="docker ps -l"
 alias dpsq="docker ps -q"
 alias dpsql="docker ps -ql"
 
-alias a1='awk "{print \$1}"'
-alias a2='awk "{print \$2}"'
-alias a3='awk "{print \$3}"'
-alias a4='awk "{print \$4}"'
+function a1 { awk "{print \$1}" ; }
+function a2 { awk "{print \$2}" ; }
+function a3 { awk "{print \$3}" ; }
+function a4 { awk "{print \$4}" ; }
 
 unalias md
 
@@ -171,7 +166,7 @@ function frg {
 
 alias ap="ansible-playbook ~/dotfiles/ansible/bootstrap.yaml"
 
-func thist() {
+function thist() {
   perl -pe 's/^.+?;//' "$HISTFILE"|sort|uniq -c|sort -rn|head -15
 }
 
@@ -224,11 +219,11 @@ unset __conda_setup
 # <<< conda initialize <<<
 
 alias dg="doggo --strategy=random --time"
-func dj() { dg --json "$@" | jq -C . }
+function dj() { dg --json "$@" | jq -C . ; }
 
 alias gotv="got -v"
 
-function node4pod { kubectl get node -o json $(kgp $1 --no-headers -o custom-columns=NODE:.spec.nodeName) }
+function node4pod { kubectl get node -o json $(kgp $1 --no-headers -o custom-columns=NODE:.spec.nodeName) ; }
 
 if [[ -d $HOME/bin ]] ; then
   export PATH=$HOME/bin:$PATH
@@ -257,10 +252,10 @@ alias gdw="gd -w"
 alias utc="date -z UTC"
 alias buu="brew update && brew upgrade"
 
-function git-rotate() { git branch -D $1 && gcb $1 }
+function git-rotate() { git branch -D $1 && gcb $1 ; }
 
 t2 () {
-  column -t 
+  column -t
 }
 
 #
@@ -282,6 +277,13 @@ eval "$(pyenv init -)"
 alias deactivate="pyenv deactivate"
 alias activate_nb='pyenv activate nb'
 
+alias cursor-agent='/Users/brian.landers/.local/bin/cursor-agent'
+
+alias stacked_rebase='cursor agent "the $(git_main_branch) branch has been squash-merged from one or more commits that exist on this branch. Pull the latest version of $(git_main_branch) from the remote, then rebase the current branch ($(git_current_branch)) on top of $(git_main_branch), taking this into account."'
+alias nostack="jq 'del(.callstack)'"
+
+unalias lg
+alias lg="lazygit"
 
 # Added by LM Studio CLI (lms)
 export PATH="$PATH:/Users/blanders/.lmstudio/bin"

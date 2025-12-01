@@ -108,5 +108,9 @@
     {
         "key": "shift+cmd+j",
         "command": "extension.aceJump.line"
+    },
+    {
+        "key": "cmd+n",
+        "command": "-workbench.action.files.newUntitledFile"
     }
 ]
