@@ -277,13 +277,15 @@ eval "$(pyenv init -)"
 alias deactivate="pyenv deactivate"
 alias activate_nb='pyenv activate nb'
 
-alias cursor-agent='/Users/brian.landers/.local/bin/cursor-agent'
-
 alias stacked_rebase='cursor agent "the $(git_main_branch) branch has been squash-merged from one or more commits that exist on this branch. Pull the latest version of $(git_main_branch) from the remote, then rebase the current branch ($(git_current_branch)) on top of $(git_main_branch), taking this into account."'
 alias nostack="jq 'del(.callstack)'"
 
 unalias lg
 alias lg="lazygit"
+alias dickhouse="docker run --entrypoint clickhouse -it --rm clickhouse/clickhouse-server"
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && \. "/opt/homebrew/opt/nvm/nvm.sh"  # This loads nvm
 
 # Added by LM Studio CLI (lms)
 export PATH="$PATH:/Users/blanders/.lmstudio/bin"
