@@ -13,6 +13,7 @@ font-size = 15
 
 theme = "Nord"
 background = "#000000"
+foreground = "#ffffff"
 
 window-width = 120
 window-height = 42

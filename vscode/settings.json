@@ -414,5 +414,6 @@
     "scminput": false
   },
   "docker.extension.enableComposeLanguageServer": false,
-  "workbench.colorTheme": "Solarized Dark"
+  "workbench.colorTheme": "Solarized Dark",
+  "aws.cloudformation.telemetry.enabled": false
 }

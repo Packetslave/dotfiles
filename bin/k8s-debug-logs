@@ -1,0 +1,125 @@
+#!/usr/bin/env bash
+#
+# Enable debug logging on all pods in a Kubernetes namespace
+# Usage: k8s-debug-logs [--context <context>] [--log-level <level>] <namespace>
+
+set -euo pipefail
+
+# Parse arguments
+CONTEXT=""
+NAMESPACE=""
+LOG_LEVEL="DEBUG"
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --context)
+            if [ -z "${2:-}" ]; then
+                echo "Error: --context requires an argument" >&2
+                exit 1
+            fi
+            CONTEXT="$2"
+            shift 2
+            ;;
+        --log-level)
+            if [ -z "${2:-}" ]; then
+                echo "Error: --log-level requires an argument" >&2
+                exit 1
+            fi
+            LOG_LEVEL="$2"
+            shift 2
+            ;;
+        -*)
+            echo "Error: Unknown option: $1" >&2
+            echo "Usage: $0 [--context <context>] [--log-level <level>] <namespace>" >&2
+            exit 1
+            ;;
+        *)
+            if [ -n "$NAMESPACE" ]; then
+                echo "Error: Multiple namespaces provided" >&2
+                echo "Usage: $0 [--context <context>] [--log-level <level>] <namespace>" >&2
+                exit 1
+            fi
+            NAMESPACE="$1"
+            shift
+            ;;
+    esac
+done
+
+# Check if namespace argument is provided
+if [ -z "$NAMESPACE" ]; then
+    echo "Error: Namespace argument required" >&2
+    echo "Usage: $0 [--context <context>] [--log-level <level>] <namespace>" >&2
+    exit 1
+fi
+
+LOCAL_PORT=16060
+
+# Build kubectl command prefix
+KUBECTL_CMD="kubectl"
+if [ -n "$CONTEXT" ]; then
+    KUBECTL_CMD="kubectl --context=$CONTEXT"
+    echo "Using context: $CONTEXT"
+fi
+
+echo "Setting log level to: $LOG_LEVEL"
+
+# Verify kubectl is available
+if ! command -v kubectl &> /dev/null; then
+    echo "Error: kubectl command not found" >&2
+    exit 1
+fi
+
+# Verify namespace exists
+if ! $KUBECTL_CMD get namespace "$NAMESPACE" &> /dev/null; then
+    echo "Error: Namespace '$NAMESPACE' not found" >&2
+    exit 1
+fi
+
+# Get all pods in the namespace
+echo "Finding pods in namespace '$NAMESPACE'..."
+PODS=$($KUBECTL_CMD get pods -n "$NAMESPACE" -o jsonpath='{.items[*].metadata.name}')
+
+if [ -z "$PODS" ]; then
+    echo "No pods found in namespace '$NAMESPACE'"
+    exit 0
+fi
+
+# Convert to array
+read -ra POD_ARRAY <<< "$PODS"
+echo "Found ${#POD_ARRAY[@]} pod(s)"
+echo
+
+# Process each pod
+for POD in "${POD_ARRAY[@]}"; do
+    echo "Processing pod: $POD"
+    
+    # Start port-forward in background
+    $KUBECTL_CMD port-forward -n "$NAMESPACE" "pod/$POD" "$LOCAL_PORT:6060" &> /dev/null &
+    PF_PID=$!
+    
+    # Wait for port-forward to establish
+    sleep 2
+    
+    # Check if port-forward is still running
+    if ! kill -0 $PF_PID 2> /dev/null; then
+        echo "  ⚠️  Warning: Failed to establish port-forward for $POD (pod may not have port 6060)"
+        continue
+    fi
+    
+    # Send log level
+    if curl -s -X POST -d "$LOG_LEVEL" "http://localhost:$LOCAL_PORT/loglevel" &> /dev/null; then
+        echo "  ✓ Log level set to $LOG_LEVEL on $POD"
+    else
+        echo "  ⚠️  Warning: Failed to set log level on $POD (endpoint may not be available)"
+    fi
+    
+    # Clean up port-forward
+    kill $PF_PID 2> /dev/null || true
+    wait $PF_PID 2> /dev/null || true
+    
+    # Small delay between pods
+    sleep 1
+done
+
+echo
+echo "Completed processing all pods in namespace '$NAMESPACE'"
