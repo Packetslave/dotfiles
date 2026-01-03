@@ -1,0 +1,13 @@
+#line-edit
+^p      up
+^n      down
+^f      right
+^b      left
+^a      home
+^e      end
+\eb     word-left
+\ef     word-right
+\ed     word-delete
+^w      word-backspace
+^k      word-delete    \ed\ed\ed\ed\ed\ed\ed\ed\ed\ed\ed\ed\ed\ed\ed\ed\ed\ed\ed\ed\ed\ed\ed\ed\ed\ed\ed\ed\ed\ed\ed\ed\ed\ed\ed\ed\ed\ed\ed\ed\ed\ed\ed\ed\ed\ed\ed\ed\ed\ed
+
