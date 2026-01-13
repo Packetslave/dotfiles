@@ -116,27 +116,6 @@
         state: link
         force: true
 
-    - name: Tap external repositories
-      community.general.homebrew_tap:
-        name:
-          - buildpacks/tap
-          - codecrafters-io/tap
-          - noahgorstein/tap
-
-    - name: Tap a Homebrew repository using url, state present
-      community.general.homebrew_tap:
-        name: shodan-public/homebrew-shodan
-        url: 'https://gitlab.com/shodan-public/homebrew-shodan'
-
-    - name: Install cask
-      community.general.homebrew_cask:
-        name:
-          - choosy
-          - git-credential-manager
-          - mouseless
-          - nikitabobko/tap/aerospace
-        state: present
-
     - name: Install packages with homebrew
       community.general.homebrew:
         name:
@@ -148,9 +127,7 @@
           - bat
           - bat-extras
           - bison
-          - buildpacks/tap/pack
           - clusterctl
-          - codecrafters-io/tap/codecrafters
           - code-server
           - coreutils
           - doggo
@@ -176,8 +153,7 @@
           - lsd
           - neovim
           - nmap
-          - noahgorstein/tap/jqp
-          - node
+          - nvm
           - openjdk
           - oras
           - pipenv
@@ -188,6 +164,7 @@
           - protoc-gen-go-grpc
           - pv
           - pygments
+          - pyenv
           - rename
           - ripgrep
           - rustup
