@@ -271,6 +271,8 @@ type atuin &> /dev/null && eval "$(atuin init zsh --disable-up-arrow)"
 
 type rbenv &> /dev/null && eval "$(rbenv init - --no-rehash zsh)"
 
+type nvim &> /dev/null && alias vi=nvim && alias vim=nvim && alias nv=nvim
+
 [[ "$TERM_PROGRAM" == "vscode" ]] && . "$(code --locate-shell-integration-path zsh --user-data-dir='.' --no-sandbox)"
 
 eval "$(pyenv init -)"
