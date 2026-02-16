@@ -1,0 +1,127 @@
+#!/bin/bash
+set -Eeuo pipefail
+
+# Backup script with checksum generation
+# Creates timestamped tar.gz backup and SHA256 checksum, then copies to Dropbox
+
+# Usage
+if [ $# -ne 1 ]; then
+    echo "Usage: $(basename "$0") <source_directory>" >&2
+    exit 1
+fi
+
+# Set up paths
+SOURCE_DIR="$(cd "$1" 2>/dev/null && pwd)" || { echo "Error: cannot resolve path: $1" >&2; exit 1; }
+DIR_NAME=$(basename "$SOURCE_DIR")
+BACKUP_DIR="$HOME/Dropbox/Backups"
+TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
+SAFE_DIR_NAME=$(echo "$DIR_NAME" | tr -cs 'A-Za-z0-9._-' '_')
+BACKUP_FILENAME="${SAFE_DIR_NAME}_backup_${TIMESTAMP}.tar.gz"
+TEMP_DIR=$(mktemp -d)
+TEMP_BACKUP_PATH="${TEMP_DIR}/${BACKUP_FILENAME}"
+CHECKSUM_FILENAME="${BACKUP_FILENAME}.sha256"
+
+# Clean up temporary directory on exit
+# shellcheck disable=SC2329
+cleanup() {
+    rm -rf "$TEMP_DIR"
+}
+trap cleanup EXIT
+
+# Color codes for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+# Function to print colored messages
+print_info() {
+    echo -e "${GREEN}[INFO]${NC} $1"
+}
+
+print_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
+}
+
+print_warning() {
+    echo -e "${YELLOW}[WARNING]${NC} $1"
+}
+
+# Check if source directory exists
+if [ ! -d "$SOURCE_DIR" ]; then
+    print_error "Source directory does not exist: $SOURCE_DIR"
+    exit 1
+fi
+
+# Check if source directory is empty
+if [ -z "$(ls -A "$SOURCE_DIR")" ]; then
+    print_warning "Source directory is empty: $SOURCE_DIR"
+    read -p "Continue anyway? (y/n): " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        print_info "Backup cancelled."
+        exit 0
+    fi
+fi
+
+# Create backup directory if it doesn't exist
+if [ ! -d "$BACKUP_DIR" ]; then
+    print_info "Creating backup directory: $BACKUP_DIR"
+    if ! mkdir -p "$BACKUP_DIR"; then
+        print_error "Failed to create backup directory"
+        exit 1
+    fi
+fi
+
+# Create the tar.gz backup
+print_info "Creating backup: $BACKUP_FILENAME"
+print_info "Source: $SOURCE_DIR"
+
+PARENT_DIR=$(dirname "$SOURCE_DIR")
+if ! tar -czf "$TEMP_BACKUP_PATH" -C "$PARENT_DIR" "$DIR_NAME" 2>&1; then
+    print_error "Failed to create tar.gz backup"
+    exit 1
+fi
+
+# Get backup file size
+BACKUP_SIZE=$(du -h "$TEMP_BACKUP_PATH" | cut -f1)
+print_info "Backup created successfully (Size: $BACKUP_SIZE)"
+
+# Generate SHA256 checksum
+print_info "Generating SHA256 checksum..."
+cd "$TEMP_DIR" || exit
+if ! sha256sum "$BACKUP_FILENAME" > "$CHECKSUM_FILENAME"; then
+    print_error "Failed to generate checksum"
+    exit 1
+fi
+
+CHECKSUM=$(cut -d' ' -f1 "$CHECKSUM_FILENAME")
+print_info "Checksum generated: $CHECKSUM"
+
+# Copy backup to Dropbox
+print_info "Copying backup to: $BACKUP_DIR"
+if ! cp "$TEMP_BACKUP_PATH" "$BACKUP_DIR/"; then
+    print_error "Failed to copy backup file to Dropbox"
+    exit 1
+fi
+
+# Copy checksum to Dropbox
+print_info "Copying checksum to: $BACKUP_DIR"
+if ! cp "${TEMP_DIR}/${CHECKSUM_FILENAME}" "$BACKUP_DIR/"; then
+    print_error "Failed to copy checksum file to Dropbox"
+    exit 1
+fi
+
+# Final verification
+if [ -f "$BACKUP_DIR/$BACKUP_FILENAME" ] && [ -f "$BACKUP_DIR/$CHECKSUM_FILENAME" ]; then
+    print_info "Backup completed successfully!"
+    echo ""
+    echo "Backup file: $BACKUP_DIR/$BACKUP_FILENAME"
+    echo "Checksum file: $BACKUP_DIR/$CHECKSUM_FILENAME"
+    echo "SHA256: $CHECKSUM"
+else
+    print_error "Backup verification failed"
+    exit 1
+fi
+
+exit 0
