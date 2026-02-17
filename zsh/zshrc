@@ -267,15 +267,15 @@ if [[ -f $HOME/.zshrc.after ]] ; then
 fi
 
 
-type atuin &> /dev/null && eval "$(atuin init zsh --disable-up-arrow)"
+type atuin &> /dev/null && >&2 echo 🐚 atuin && eval "$(atuin init zsh --disable-up-arrow)"
 
-type rbenv &> /dev/null && eval "$(rbenv init - --no-rehash zsh)"
+type rbenv &> /dev/null && >&2 echo 🐚 rbenv && eval "$(rbenv init - --no-rehash zsh)"
 
 type nvim &> /dev/null && alias vi=nvim && alias vim=nvim && alias nv=nvim
 
 [[ "$TERM_PROGRAM" == "vscode" ]] && . "$(code --locate-shell-integration-path zsh --user-data-dir='.' --no-sandbox)"
 
-eval "$(pyenv init -)"
+type pyenv &> /dev/null && >&2 echo 🐚 pyenv && eval "$(pyenv init -)"
 alias deactivate="pyenv deactivate"
 alias activate_nb='pyenv activate nb'
 
@@ -290,11 +290,10 @@ export LESS='-Ric -x4 --use-color -Dd+r$Du+b'
 export MANROFFOPT='-c'
 
 export NVM_DIR="$HOME/.nvm"
-[ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && \. "/opt/homebrew/opt/nvm/nvm.sh"  # This loads nvm
+[ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && >&2 echo 🐚 nvm && \. "/opt/homebrew/opt/nvm/nvm.sh" --no-use  # This loads nvm
 
 # Added by LM Studio CLI (lms)
 export PATH="$PATH:/Users/blanders/.lmstudio/bin"
 # End of LM Studio CLI section
 
-export NVM_DIR="$HOME/.nvm"
-[ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && \. "/opt/homebrew/opt/nvm/nvm.sh"  # This loads nvm
+>&2 echo ✅ Done with zshrc
