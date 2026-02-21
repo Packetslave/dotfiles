@@ -290,7 +290,7 @@ export LESS='-Ric -x4 --use-color -Dd+r$Du+b'
 export MANROFFOPT='-c'
 
 export NVM_DIR="$HOME/.nvm"
-[ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && >&2 echo 🐚 nvm && \. "/opt/homebrew/opt/nvm/nvm.sh" --no-use  # This loads nvm
+[ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && >&2 echo 🐚 nvm && \. "/opt/homebrew/opt/nvm/nvm.sh" # This loads nvm
 
 # Added by LM Studio CLI (lms)
 export PATH="$PATH:/Users/blanders/.lmstudio/bin"
