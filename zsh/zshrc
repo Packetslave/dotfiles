@@ -273,6 +273,8 @@ type rbenv &> /dev/null && >&2 echo 🐚 rbenv && eval "$(rbenv init - --no-reha
 
 type nvim &> /dev/null && alias vi=nvim && alias vim=nvim && alias nv=nvim
 
+type nvim &> /dev/null && alias vi=nvim && alias vim=nvim && alias nv=nvim
+
 [[ "$TERM_PROGRAM" == "vscode" ]] && . "$(code --locate-shell-integration-path zsh --user-data-dir='.' --no-sandbox)"
 
 alias stacked_rebase='cursor agent "the $(git_main_branch) branch has been squash-merged from one or more commits that exist on this branch. Pull the latest version of $(git_main_branch) from the remote, then rebase the current branch ($(git_current_branch)) on top of $(git_main_branch), taking this into account."'
