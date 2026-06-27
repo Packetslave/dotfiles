@@ -299,3 +299,4 @@ export PATH=$HOME/.local/bin:$PATH
 >&2 echo python3 is $(which python3)
 
 >&2 echo ✅ Done with zshrc
+export SOPS_AGE_KEY_FILE="$HOME/.config/sops/age/keys.txt"
