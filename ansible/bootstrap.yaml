@@ -120,22 +120,15 @@
       community.general.homebrew:
         name:
           - 1password-cli
-          - abseil
-          - ansible
           - atuin
-          - autoenv
           - bat
           - bat-extras
-          - bison
-          - clusterctl
-          - code-server
           - coreutils
           - doggo
           - eza
           - fd
           - ffmpeg
           - fzf
-          - geonet
           - git
           - git-delta
           - git-extras
@@ -143,20 +136,15 @@
           - grpcurl
           - hugo
           - jq
-          - k3d
           - k9s
           - kubetail
-          - kind
           - kubernetes-cli
           - kubetail
           - lazydocker
-          - lsd
           - neovim
           - nmap
           - nvm
           - openjdk
-          - oras
-          - pipenv
           - posting
           - powerlevel10k
           - protobuf
@@ -164,7 +152,6 @@
           - protoc-gen-go-grpc
           - pv
           - pygments
-          - pyenv
           - rename
           - ripgrep
           - rustup
@@ -175,7 +162,6 @@
           - tig
           - tmux
           - tmuxinator
-          - xh
           - xz
           - yq
           - yt-dlp
