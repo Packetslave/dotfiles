@@ -1,20 +1,6 @@
 #!/usr/bin/env zsh
 # shellcheck shell=bash disable=SC2296,SC2034
 
-if [[ ! -n "${CURSOR_AGENT}" && "$TERM_PROGRAM" != "vscode" ]] ; then
-  source /opt/homebrew/share/powerlevel10k/powerlevel10k.zsh-theme
-fi
-
-# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
-# Initialization code that may require console input (password prompts, [y/n]
-# confirmations, etc.) must go above this block; everything else may go below.
-
-if [[ ! -n "${CURSOR_AGENT}" ]] ; then
-  if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
-    source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
-  fi
-fi
-
 #
 ## My zshrc
 ##
@@ -117,15 +103,7 @@ if [[ -d "$HOME/src/external/oh-my-zsh" ]] ; then
     zoxide
   )
 
-  # Set Oh My Zsh theme conditionally
-  if [[ -n "${CURSOR_AGENT}" || "$TERM_PROGRAM" == "vscode" ]]; then
-    ZSH_THEME=""  # Disable Powerlevel10k for Cursor
-  else
-    ZSH_THEME="powerlevel10k/powerlevel10k"
-  fi
-
   source $ZSH/oh-my-zsh.sh
-
 
 else
   >&2 "WARNING: oh my zsh not installed"
@@ -191,12 +169,6 @@ alias rg=batgrep
 if [[ "$TERM_PROGRAM" == "vscode" || -n "$CURSOR_AGENT" ]]; then
   PROMPT='%n@%m:%~%# '
   RPROMPT=''
-else
-  [[ -f ~/.p10k.zsh ]] && source ~/.p10k.zsh
-fi
-
-if [[ -d /opt/homebrew ]] ; then
-    source /opt/homebrew/share/powerlevel10k/powerlevel10k.zsh-theme
 fi
 
 export AWS_SDK_LOAD_CONFIG=true
@@ -298,5 +270,59 @@ export PATH="$PATH:/Users/blanders/.lmstudio/bin"
 export PATH=$HOME/.local/bin:$PATH
 >&2 echo python3 is $(which python3)
 
+function set_default_app() {
+  if [[ $# -lt 2 || $# -gt 3 ]]; then
+    >&2 echo "usage: set_default_app <bundle-id> <extension-or-uti> [role]"
+    >&2 echo "example: set_default_app com.microsoft.VSCode .json all"
+    return 2
+  fi
+
+  local bundle_id=$1
+  local filetype=$2
+  local role=${3-all}
+
+  duti -s "${bundle_id}" "${filetype}" "${role}"
+}
+
+function app_bundle_id() {
+  if [[ $# -ne 1 ]]; then
+    >&2 echo "usage: app_bundle_id <path-to-app>"
+    >&2 echo "example: app_bundle_id /Applications/Visual\\ Studio\\ Code.app"
+    return 2
+  fi
+
+  local app_path=${1%/}
+  local info_plist="${app_path}/Contents/Info.plist"
+
+  /usr/libexec/PlistBuddy -c 'Print CFBundleIdentifier' "${info_plist}"
+}
+
+iterm() {
+    local cmd="${1:-}"
+    local size="${2:-80,24}"
+    
+    local cols="${size%%,*}"
+    local rows="${size##*,}"
+
+    osascript -e 'tell application "iTerm2"' \
+              -e '  set newWin to (create window with default profile)' \
+              -e '  tell current session of newWin' \
+              -e "    set columns to $cols" \
+              -e "    set rows to $rows" \
+              -e "    write text \"cd '$(pwd)' ${cmd:+&& $cmd}\"" \
+              -e '  end tell' \
+              -e 'end tell'
+}
+
+function vmd() {
+  iterm "glow -p $1 -w 0" 160,48
+}
+
+export DRONE_SERVER=https://drone.build.ue1.snooguts.net
+export SRC_ENDPOINT=https://reddit.sourcegraphcloud.com
+
+eval "$(starship init zsh)"
+
+# This line should always be last
 >&2 echo ✅ Done with zshrc
 export SOPS_AGE_KEY_FILE="$HOME/.config/sops/age/keys.txt"

@@ -1,0 +1,146 @@
+export SNOODEV_DIR=/Users/brian.landers/src/snoodev
+export PATH=$HOME/go/bin:$PATH
+
+source "$(brew --prefix)/share/google-cloud-sdk/path.zsh.inc"
+source "$(brew --prefix)/share/google-cloud-sdk/completion.zsh.inc"
+
+function ec()
+{
+  local ENVOY_PORT=9001
+  local NS='contour-envoy-public-ingress'
+  local ENVOY_POD=$(kubectl -n $NS get pods -l app.kubernetes.io/component=envoy -o name | head -1)
+  kubectl -n $NS port-forward $ENVOY_POD $ENVOY_PORT
+}
+alias ecc="curl http://localhost:9001/config_dump"
+
+function tacpod () {
+    kubectl get pods "$@" -o json -n traffic-admission-control \
+        | jq -r '.items[].metadata.name'  \
+        | grep -v loader \
+        | shuf \
+        | head -1
+}
+
+function fastly_pops () {
+  curl -s "https://api.fastly.com/datacenters" \
+    -H "Fastly-Key: $FASTLY_API_KEY" \
+    -H "Accept: application/json" \
+      | jq -r '.[]'
+}
+
+function fastly_pop_codes () {
+  fastly_pops | jq -r '.code' \
+      | perl -ne 'chomp; push @d, $_; END {
+          print "datacenter=~\"(", join("|", sort(@d)), ")\"\n"
+        }'
+}
+
+function fastly_versions () {
+  local sid=$(fastly_service_id ${1-reddit.com})
+  curl -so - -H "Fastly-Key: ${FASTLY_API_KEY}" \
+    -H "Accept: application/json" \
+    "https://api.fastly.com/service/${sid}/version" \
+      | jq '.[].updated_at' \
+      | tail -5
+}
+
+function rls_edit() {
+  local CONTEXT=${1-$(kubectl config current-context)}
+  local NS=global-rate-limiter
+  local POD=$(
+    kubectl --context ${CONTEXT} get pods -n $NS \
+      | tail -1 | awk '{print $1}'
+  )
+  local MAP=$(
+    kubectl --context ${CONTEXT} -n $NS get pod $POD -o json \
+      | jq -r '.spec.volumes[] | select(.name == "service-config").configMap.name'
+  )
+
+  kubectl --context ${CONTEXT} edit configmap -n $NS $MAP
+
+  echo APPLY: kubectl --context $CONTEXT -n $NS rollout restart global-rate-limiter
+}
+
+function fastly_service_id () {
+        local service=${1-reddit.com}
+        curl -so - -H "Fastly-Key: ${FASTLY_API_KEY}" \
+            -H "Accept: application/json" \
+            "https://api.fastly.com/service/search?name=${service}" \
+            | jq -r ".id"
+}
+
+function fastly_log_status() {
+    local service=${1-reddit.com}
+    local sid=$(fastly_service_id ${service})
+
+    curl -so - \
+        -H "Fastly-Key: ${FASTLY_API_KEY}" \
+        https://api.fastly.com/service/${sid}/logging_status \
+        | jq .
+}
+
+function ctime () {
+    local url=${1-https://reddit.com}
+    curl -o /dev/null -s \
+    -w "dnslookup: %{time_namelookup} | connect: %{time_connect} | appconnect: %{time_appconnect} | pretransfer: %{time_pretransfer} | starttransfer: %{time_starttransfer} | total: %{time_total} | size: %{size_download}\n" \
+    ${url} \
+    | perl -pe 's/(0\..+?) /($1 * 1000) . "ms "/ge'
+}
+alias rsleep='read -t $(printf "0.%02d" $(( 0.5 + ($RANDOM % 100) ))) || true'
+
+function update_achilles() {
+    local dir=$(pwd)
+    for i in $HOME/src/achilles*; do
+        echo $i
+        cd $i
+        gcm
+        git pull --rebase
+    done
+    cd $dir
+}
+
+function bqschema() {
+    if [[ -z "${1}" ]]; then
+      >&2 echo "usage: bqschema <table>"
+    fi
+
+    bq query --nouse_legacy_sql --format=json \
+      "SELECT ddl FROM \`fastly_logs.INFORMATION_SCHEMA.TABLES\` WHERE table_name=\"${1}\"" \
+       | jq -r '.[].ddl'
+}
+
+function bqfields() {
+    bqschema fastly-reddit-production \
+        | perl -e 'local $/; $_ = <>; s/^.+?\(//ms; s/\).+$//ms; print' \
+        | minus1 \
+        | n2 \
+        | sort
+}
+
+function bqf() {
+        bqfields | fzf
+}
+
+type rct &> /dev/null && eval "$(rct completion zsh)"
+alias cftoken='op item get "Reddit Cloudflare API Token" --fields notesPlain'
+alias cft='CLOUDFLARE_API_TOKEN=$(cftoken) terraform'
+
+export CF_ACCOUNT_PROD=f80d9eb7f762f8a06a411dc33d6dc350
+export CF_ACCOUNT_DEV=d95fbbcda8a32f0f6cff4915133fcc07
+export CF_ZONE_GQL=283cfbb690cee3eed5ab8e686a2a8ee3
+
+alias gemini='GOOGLE_CLOUD_PROJECT="rddt-devx-gemini-code-assist" pnpx @google/gemini-cli'
+export CF_KV_NAMESPACE=e20748edd30d4b74ab5246c4a4a4ba46
+
+export SNIPPETS_BACKUP="$HOME/Documents/SameBrain/Snippets/Backups"
+
+function backup_snippets() {
+  local FILE=all.md
+
+  if [[ ! -d ${SNIPPETS_BACKUP} ]] ; then
+    mkdir -p ${SNIPPETS_BACKUP}
+  fi
+
+  go run -C $HOME/src/snippets/cli . get --start 2000-01-01 > ${SNIPPETS_BACKUP}/${FILE}
+}
+
