@@ -1,0 +1,98 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "share": "disabled",
+  "enabled_providers": ["llmplatform", "llmplatform-gpt"],
+  "plugin": [
+    "opencode-models-discovery@latest",
+    [
+      "opencode-mempalace@latest",
+      {
+        "mcpCommand": [
+          "/Users/brian.landers/.local/bin/mempalace-mcp"
+        ]
+      }
+    ]
+  ],
+  "mcp": {
+    "kube-web-view": {
+      "type": "remote",
+      "url": "https://kube-web-view.build.ue1.snooguts.net/mcp",
+      "enabled": true
+    },
+    "private-journal": {
+      "type": "local",
+      "command": [
+        "/Users/brian.landers/.nvm/versions/node/v22.22.2/bin/npx",
+        "-y",
+        "github:obra/private-journal-mcp"
+      ],
+      "enabled": true
+    },
+    "context7": {
+      "type": "remote",
+      "url": "https://mcp.context7.com/mcp",
+      "enabled": true
+    },
+    "cloudflare-docs": {
+      "type": "remote",
+      "url": "https://docs.mcp.cloudflare.com/mcp",
+      "enabled": true
+    },
+    "1password": {
+      "type": "local",
+      "command": [
+        "/Applications/1Password.app/Contents/MacOS/onepassword-mcp"
+      ],
+      "enabled": true
+    }
+  },
+  "provider": {
+    "llmplatform": {
+      "npm": "file:///Users/brian.landers/.config/opencode/llmplatform-openai-compatible.mjs",
+      "name": "LLM Platform",
+      "options": {
+        "baseURL": "https://llm-platform.pri.serving-iad-a01.aws.achilles.snooguts.net/v1/openai",
+        "apiKey": "project/opencode-dev",
+        "includeUsage": true,
+        "modelsDiscovery": {
+          "enabled": true,
+          "endpoint": "/models",
+          "models": {
+            "excludeRegex": [
+              "^gpt-5",
+              "^gpt-[6-9]",
+              "^o[0-9]",
+              "codex",
+              "-tts$",
+              "live-",
+              "native-audio",
+              "image-generation",
+              "embedding"
+            ]
+          }
+        }
+      }
+    },
+    "llmplatform-gpt": {
+      "npm": "@ai-sdk/openai",
+      "name": "LLM Platform (GPT)",
+      "options": {
+        "baseURL": "https://llm-platform.pri.serving-iad-a01.aws.achilles.snooguts.net/v1/openai",
+        "apiKey": "project/opencode-dev",
+        "includeUsage": true,
+        "modelsDiscovery": {
+          "enabled": true,
+          "endpoint": "/models",
+          "models": {
+            "includeRegex": [
+              "^gpt-5",
+              "^gpt-[6-9]",
+              "^o[0-9]",
+              "codex"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

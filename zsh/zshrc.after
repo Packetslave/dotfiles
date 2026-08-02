@@ -125,6 +125,8 @@ type rct &> /dev/null && eval "$(rct completion zsh)"
 alias cftoken='op item get "Reddit Cloudflare API Token" --fields notesPlain'
 alias cft='CLOUDFLARE_API_TOKEN=$(cftoken) terraform'
 
+alias ftoken='op item get "Fastly API Key" --fields notesPlain'
+
 export CF_ACCOUNT_PROD=f80d9eb7f762f8a06a411dc33d6dc350
 export CF_ACCOUNT_DEV=d95fbbcda8a32f0f6cff4915133fcc07
 export CF_ZONE_GQL=283cfbb690cee3eed5ab8e686a2a8ee3
