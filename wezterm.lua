@@ -24,8 +24,8 @@ config.colors = {
   tab_bar = {
     background = '#000000',
     active_tab = { bg_color = '#ffffff', fg_color = '#000000', intensity = 'Bold' },
-    inactive_tab = { bg_color = '#292e42', fg_color = '#a9b1d6' },
-    inactive_tab_hover = { bg_color = '#3b4261', fg_color = '#c0caf5' },
+    inactive_tab = { bg_color = '#3b4261', fg_color = '#c0caf5' },
+    inactive_tab_hover = { bg_color = '#414868', fg_color = '#c0caf5' },
     new_tab = { bg_color = '#000000', fg_color = '#565f89' },
     new_tab_hover = { bg_color = '#292e42', fg_color = '#c0caf5' },
   },
