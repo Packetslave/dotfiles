@@ -322,6 +322,11 @@ export DRONE_SERVER=https://drone.build.ue1.snooguts.net
 export SRC_ENDPOINT=https://reddit.sourcegraphcloud.com
 
 export SOPS_AGE_KEY_FILE="$HOME/.config/sops/age/keys.txt"
+
+claude() {
+  GITHUB_PERSONAL_ACCESS_TOKEN="$(/opt/homebrew/bin/sops -d --extract '["GITHUB_PERSONAL_ACCESS_TOKEN"]' /Users/blanders/src/cowork/secrets/github.enc.env)" command claude "$@"
+}
+
 alias p8='sudo mtr -z 8.8.8.8'
 alias crg='rg --color=always'
 alias cbat='bat --color=always'

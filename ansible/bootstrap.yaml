@@ -88,11 +88,6 @@
         src: ~/dotfiles/zsh/zshrc
         dest: ~/.zshrc
         state: link
-    - name: Create links - zsh p10k
-      ansible.builtin.file:
-        src: ~/dotfiles/zsh/p10k.zsh
-        dest: ~/.p10k.zsh
-        state: link
 
     - name: Create links - gitconfig
       ansible.builtin.template:
