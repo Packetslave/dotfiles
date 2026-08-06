@@ -16,8 +16,9 @@ config.font_size = 16
 config.line_height = 1.2
 config.color_scheme = 'Tokyo Night'
 
--- No macOS title bar; window is still resizable and AeroSpace handles placement
-config.window_decorations = "RESIZE"
+-- No macOS title bar, but keep native traffic lights in the tab bar.
+-- Window can be dragged by the tab bar (or Cmd+drag anywhere).
+config.window_decorations = "INTEGRATED_BUTTONS|RESIZE"
 
 -- Tab bar: black background, fixed-width tabs
 config.use_fancy_tab_bar = false
