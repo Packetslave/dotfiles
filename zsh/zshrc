@@ -320,6 +320,7 @@ function vmd() {
 
 export DRONE_SERVER=https://drone.build.ue1.snooguts.net
 export SRC_ENDPOINT=https://reddit.sourcegraphcloud.com
+export SOPS_AGE_KEY_FILE="$HOME/.config/sops/age/keys.txt"
 
 export SOPS_AGE_KEY_FILE="$HOME/.config/sops/age/keys.txt"
 
