@@ -325,7 +325,10 @@ export SOPS_AGE_KEY_FILE="$HOME/.config/sops/age/keys.txt"
 export SOPS_AGE_KEY_FILE="$HOME/.config/sops/age/keys.txt"
 
 claude() {
-  GITHUB_PERSONAL_ACCESS_TOKEN="$(/opt/homebrew/bin/sops -d --extract '["GITHUB_PERSONAL_ACCESS_TOKEN"]' /Users/blanders/src/cowork/secrets/github.enc.env)" command claude "$@"
+  # One sops decrypt = one Touch ID prompt; MCP servers inherit the env
+  # (regen the file with secrets/build-claude-startup.sh after editing secrets)
+  /opt/homebrew/bin/sops exec-env /Users/blanders/src/cowork/secrets/claude-startup.enc.env \
+    "/opt/homebrew/bin/claude ${(j: :)${(q)@}}"
 }
 
 alias p8='sudo mtr -z 8.8.8.8'
