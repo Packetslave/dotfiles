@@ -177,3 +177,24 @@
         owner: root
         group: wheel
         mode: "0644"
+
+    # Ctrl+arrow Mission Control/Spaces shortcuts swallow the keys before the
+    # terminal sees them, breaking tmux's default pane-resize bindings
+    # (32=Mission Control, 33=App windows, 79=prev Space, 81=next Space)
+    - name: Disable Ctrl-arrow Mission Control shortcuts
+      ansible.builtin.command:
+        argv:
+          - defaults
+          - write
+          - com.apple.symbolichotkeys
+          - AppleSymbolicHotKeys
+          - -dict-add
+          - "{{ item }}"
+          - "<dict><key>enabled</key><false/></dict>"
+      loop: [32, 33, 79, 81]
+      changed_when: false
+
+    - name: Activate hotkey changes
+      ansible.builtin.command:
+        cmd: /System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u
+      changed_when: false
