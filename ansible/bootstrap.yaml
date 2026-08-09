@@ -140,6 +140,7 @@
           - nmap
           - nvm
           - openjdk
+          - pam-reattach
           - posting
           - powerlevel10k
           - protobuf
@@ -162,3 +163,17 @@
           - yt-dlp
           - zoxide
         state: present
+
+    # Touch ID for sudo, update-proof (sudo_local survives macOS updates);
+    # pam_reattach makes it work inside tmux/screen, ignore_ssh keeps SSH
+    # sessions on the password path
+    - name: Enable Touch ID for sudo
+      become: true
+      ansible.builtin.copy:
+        dest: /etc/pam.d/sudo_local
+        content: |
+          auth       optional       /opt/homebrew/lib/pam/pam_reattach.so ignore_ssh
+          auth       sufficient     pam_tid.so
+        owner: root
+        group: wheel
+        mode: "0644"
