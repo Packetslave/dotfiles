@@ -83,6 +83,20 @@
         state: link
         force: true
 
+    - name: Create links - wezterm config
+      ansible.builtin.file:
+        src: ~/dotfiles/wezterm.lua
+        dest: ~/.wezterm.lua
+        state: link
+        force: true
+
+    - name: Create links - starship config
+      ansible.builtin.file:
+        src: ~/dotfiles/starship.toml
+        dest: ~/.config/starship.toml
+        state: link
+        force: true
+
     - name: Create links - zsh config
       ansible.builtin.file:
         src: ~/dotfiles/zsh/zshrc
