@@ -192,6 +192,16 @@
           - zoxide
         state: present
 
+    - name: Install casks with homebrew
+      community.general.homebrew_cask:
+        name:
+          - 1password-cli
+          - agentsview
+          - claude-code
+          - gcloud-cli
+          - vlc
+        state: present
+
     # Touch ID for sudo, update-proof (sudo_local survives macOS updates);
     # pam_reattach makes it work inside tmux/screen, ignore_ssh keeps SSH
     # sessions on the password path
