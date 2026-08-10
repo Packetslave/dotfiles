@@ -83,6 +83,13 @@
         state: link
         force: true
 
+    - name: Create links - aerospace config
+      ansible.builtin.file:
+        src: ~/dotfiles/aerospace/aerospace.toml
+        dest: ~/.aerospace.toml
+        state: link
+        force: true
+
     - name: Create links - wezterm config
       ansible.builtin.file:
         src: ~/dotfiles/wezterm.lua
@@ -133,7 +140,9 @@
 
     - name: Add homebrew taps
       community.general.homebrew_tap:
-        name: agavra/tap
+        name:
+          - agavra/tap
+          - nikitabobko/tap
         state: present
 
     # Explicitly installed formulae only (installed_on_request per
@@ -219,6 +228,7 @@
           - agentsview
           - claude-code
           - gcloud-cli
+          - nikitabobko/tap/aerospace
           - vlc
         state: present
 
