@@ -83,6 +83,15 @@
         state: link
         force: true
 
+    # Karabiner saves karabiner.json via atomic rename, which replaces a file
+    # symlink with a regular file — link the whole directory instead
+    - name: Create links - karabiner config dir
+      ansible.builtin.file:
+        src: ~/dotfiles/karabiner
+        dest: ~/.config/karabiner
+        state: link
+        force: true
+
     - name: Create links - aerospace config
       ansible.builtin.file:
         src: ~/dotfiles/aerospace/aerospace.toml
@@ -228,6 +237,7 @@
           - agentsview
           - claude-code
           - gcloud-cli
+          - karabiner-elements
           - nikitabobko/tap/aerospace
           - vlc
         state: present
