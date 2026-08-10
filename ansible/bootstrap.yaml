@@ -111,39 +111,65 @@
         state: link
         force: true
 
+    - name: Add homebrew taps
+      community.general.homebrew_tap:
+        name: agavra/tap
+        state: present
+
+    # Explicitly installed formulae only (installed_on_request per
+    # `brew info --json=v2 --installed`) — dependencies are left to brew
     - name: Install packages with homebrew
       community.general.homebrew:
         name:
-          - 1password-cli
+          - age
+          - age-plugin-se
+          - agavra/tap/tuicr
+          - ansible
           - atuin
           - bat
           - bat-extras
+          - beads
+          - btop
+          - bun
+          - caddy
+          - cloc
+          - cmark-gfm
+          - colima
           - coreutils
+          - docker
+          - docker-compose
+          - dockutil
           - doggo
           - eza
           - fd
           - ffmpeg
+          - firebase-cli
           - fzf
+          - gh
           - git
           - git-delta
           - git-extras
-          - google-cloud-sdk
+          - glow
+          - go
           - grpcurl
           - hugo
           - jq
           - k9s
-          - kubetail
           - kubernetes-cli
           - kubetail
           - lazydocker
+          - librsvg
+          - marp-cli
+          - mosh
+          - mtr
           - neovim
           - nmap
           - nvm
+          - opencode
           - openjdk
           - pam-reattach
           - posting
           - powerlevel10k
-          - protobuf
           - protoc-gen-go
           - protoc-gen-go-grpc
           - pv
@@ -152,13 +178,15 @@
           - ripgrep
           - rustup
           - sesh
+          - sops
+          - starship
           - stern
           - superfile
           - tfenv
           - tig
           - tmux
           - tmuxinator
-          - xz
+          - uv
           - yq
           - yt-dlp
           - zoxide
