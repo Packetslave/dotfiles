@@ -142,7 +142,7 @@ function frg {
   fi
 }
 
-alias ap="ansible-playbook ~/dotfiles/ansible/bootstrap.yaml"
+alias ap="ansible-playbook -K ~/dotfiles/ansible/bootstrap.yaml"
 
 function thist() {
   perl -pe 's/^.+?;//' "$HISTFILE"|sort|uniq -c|sort -rn|head -15

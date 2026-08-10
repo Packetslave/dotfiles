@@ -174,12 +174,16 @@
           - cmark-gfm
           - colima
           - coreutils
+          - csvkit
           - docker
           - docker-compose
           - dockutil
           - doggo
+          - duti
           - eza
           - fd
+          - felixkratz/formulae/borders
+          - felixkratz/formulae/sketchybar
           - ffmpeg
           - firebase-cli
           - fzf
@@ -189,14 +193,19 @@
           - git-extras
           - glow
           - go
+          - grafanactl
           - grpcurl
           - hugo
+          - hunk
+          - iperf3
           - jq
           - k9s
           - kubernetes-cli
           - kubetail
           - lazydocker
           - librsvg
+          - llama.cpp
+          - mactop
           - marp-cli
           - mosh
           - mtr
@@ -206,16 +215,21 @@
           - opencode
           - openjdk
           - pam-reattach
+          - poppler
           - posting
           - powerlevel10k
           - protoc-gen-go
           - protoc-gen-go-grpc
           - pv
           - pygments
+          - rclone
           - rename
+          - restic
           - ripgrep
+          - rsync
           - rustup
           - sesh
+          - shellcheck
           - sops
           - starship
           - stern
@@ -236,10 +250,12 @@
           - 1password-cli
           - agentsview
           - claude-code
+          - darrylmorley/whatcable/whatcable
           - gcloud-cli
           - karabiner-elements
           - nikitabobko/tap/aerospace
           - vlc
+          - wezterm@nightly
         state: present
 
     # Touch ID for sudo, update-proof (sudo_local survives macOS updates);
