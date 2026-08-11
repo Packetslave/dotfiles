@@ -4,3 +4,5 @@ tmux/plugins
 emacs/emacs.d/straight
 emacs/emacs.d/ido.last
 **/.DS_Store
+.codex-backup/
+.private-journal/
