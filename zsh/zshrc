@@ -328,7 +328,7 @@ claude() {
   # One sops decrypt = one Touch ID prompt; MCP servers inherit the env
   # (regen the file with secrets/build-claude-startup.sh after editing secrets)
   /opt/homebrew/bin/sops exec-env /Users/blanders/src/cowork/secrets/claude-startup.enc.env \
-    "/opt/homebrew/bin/claude ${(j: :)${(q)@}}"
+    "/opt/homebrew/bin/claude --enable-auto-mode ${(j: :)${(q)@}}"
 }
 
 alias p8='sudo mtr -z 8.8.8.8'
