@@ -417,6 +417,39 @@
         value: false
       notify: Restart Finder
 
+    # Local web server on :2015 (see configs/README.md in the cowork repo).
+    # The canonical Caddyfile lives in cowork, so these tasks are skipped
+    # until that repo has been cloned (mac-setup.sh does the clone).
+    - name: Check for the canonical Caddyfile in the cowork repo
+      ansible.builtin.stat:
+        path: "{{ ansible_facts.env.HOME }}/src/cowork/configs/Caddyfile"
+      register: cowork_caddyfile
+
+    - name: Install the canonical Caddyfile
+      when: cowork_caddyfile.stat.exists
+      ansible.builtin.copy:
+        src: "{{ cowork_caddyfile.stat.path }}"
+        dest: /opt/homebrew/etc/Caddyfile
+        mode: "0644"
+        # --adapter is required: the validation temp file isn't named
+        # "Caddyfile", so caddy would otherwise assume JSON config
+        validate: /opt/homebrew/bin/caddy validate --adapter caddyfile --config %s
+      notify: Restart Caddy
+
+    - name: Check whether caddy is running as a brew service
+      when: cowork_caddyfile.stat.exists
+      ansible.builtin.command:
+        cmd: /opt/homebrew/bin/brew services info caddy --json
+      register: caddy_service_info
+      changed_when: false
+
+    - name: Start caddy as a brew service
+      when:
+        - cowork_caddyfile.stat.exists
+        - not (caddy_service_info.stdout | from_json | first).running
+      ansible.builtin.command:
+        cmd: /opt/homebrew/bin/brew services start caddy
+
   handlers:
     - name: Restart Dock
       ansible.builtin.command:
@@ -425,3 +458,7 @@
     - name: Restart Finder
       ansible.builtin.command:
         cmd: killall Finder
+
+    - name: Restart Caddy
+      ansible.builtin.command:
+        cmd: /opt/homebrew/bin/brew services restart caddy
