@@ -312,6 +312,10 @@
           - wezterm@nightly
           - wispr-flow
         state: present
+        # --adopt: take over an identical app already in /Applications
+        # (e.g. installed manually before the playbook ran) instead of
+        # erroring; no-op when absent or already brew-managed
+        install_options: adopt
         sudo_password: "{{ ansible_become_pass }}"
 
     # Requires being signed in to the App Store (mac-setup.sh gates on that
