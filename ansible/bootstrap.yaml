@@ -292,19 +292,40 @@
           - agentsview
           - alfred
           - claude-code
+          - cursor
           - darrylmorley/whatcable/whatcable
           - dropbox
+          - fantastical
           - font-monaspace-nf
           - gcloud-cli
+          - github # GitHub Desktop
           - karabiner-elements
           - keyboard-maestro
           - macparakeet
           - nikitabobko/tap/aerospace
           - obsidian
+          - omnifocus
+          - raycast
+          - thunderbird
+          - visual-studio-code
           - vlc
           - wezterm@nightly
+          - wispr-flow
         state: present
         sudo_password: "{{ ansible_become_pass }}"
+
+    # Requires being signed in to the App Store (mac-setup.sh gates on that
+    # during the 1Password-for-Safari install)
+    - name: Install Mac App Store apps with mas
+      community.general.mas:
+        id:
+          - 1586435171 # Actions
+          - 1659667937 # Actions For Obsidian
+          - 1453273600 # Data Jar
+          - 6463440793 # Menu Box
+          - 6757681819 # QuickMD
+          - 6747908871 # Telescopo Markdown Studio
+        state: present
 
     # Touch ID for sudo, update-proof (sudo_local survives macOS updates);
     # pam_reattach makes it work inside tmux/screen, ignore_ssh keeps SSH
