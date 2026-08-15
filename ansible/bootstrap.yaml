@@ -300,6 +300,7 @@
           - keyboard-maestro
           - macparakeet
           - nikitabobko/tap/aerospace
+          - obsidian
           - vlc
           - wezterm@nightly
         state: present

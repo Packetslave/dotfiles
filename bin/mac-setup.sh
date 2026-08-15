@@ -358,7 +358,30 @@ info "  2. sops updatekeys -y secrets/*.enc.env"
 info "  3. commit + push, then 'git pull' in $COWORK_DIR on this machine"
 
 # ---------------------------------------------------------------------------
-# 14. 1Password extension for Chrome (optional — Safari covers the bootstrap)
+# 14. Claude Code plugins
+# ---------------------------------------------------------------------------
+# The cowork repo's wiki workflow needs the claude-obsidian plugin
+# (/claude-obsidian:* skills); mattpocock-skills is the general engineering
+# skill set. Marketplace names come from each repo's .claude-plugin manifest:
+# Packetslave/claude-obsidian -> "agricidaniel-claude-obsidian" (fork keeps
+# upstream's name), mattpocock/skills -> "mattpocock".
+step "Claude Code plugins"
+add_claude_plugin() {
+    local repo="$1" marketplace="$2" plugin="$3"
+    if ! claude plugin marketplace list 2>/dev/null | grep -q "$marketplace"; then
+        claude plugin marketplace add "$repo"
+    fi
+    if claude plugin list 2>/dev/null | grep -q "${plugin}@${marketplace}"; then
+        info "$plugin already installed."
+    else
+        claude plugin install "${plugin}@${marketplace}"
+    fi
+}
+add_claude_plugin Packetslave/claude-obsidian agricidaniel-claude-obsidian claude-obsidian
+add_claude_plugin mattpocock/skills mattpocock mattpocock-skills
+
+# ---------------------------------------------------------------------------
+# 15. 1Password extension for Chrome (optional — Safari covers the bootstrap)
 # ---------------------------------------------------------------------------
 step "1Password extension for Chrome"
 ONEPASSWORD_EXT_ID="aeblfdkhhhdcdjpifhhbdiojplfjncoa"
