@@ -151,6 +151,7 @@
       community.general.homebrew_tap:
         name:
           - agavra/tap
+          - felixkratz/formulae
           - nikitabobko/tap
         state: present
 
