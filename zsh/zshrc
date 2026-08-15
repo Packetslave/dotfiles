@@ -106,8 +106,8 @@ if [[ -d "$HOME/src/external/oh-my-zsh" ]] ; then
   source $ZSH/oh-my-zsh.sh
 
 else
-  >&2 "WARNING: oh my zsh not installed"
-  >&2 "mkdir -p ~/src/external && cd ~/src/external && git clone https://github.com/robbyrussell/oh-my-zsh.git"
+  echo >&2 "WARNING: oh-my-zsh not installed — run the bootstrap playbook, or:"
+  echo >&2 "git clone --depth 1 https://github.com/ohmyzsh/ohmyzsh.git ~/src/external/oh-my-zsh"
 fi
 
 # Why aren't these defined?
