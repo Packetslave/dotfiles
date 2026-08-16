@@ -427,6 +427,15 @@ if [[ -d "$COWORK_DIR/.git" ]]; then
     else
         (cd "$EXTERNAL_DIR/omnifocus-cli" && bun install && bun run build)
     fi
+
+    # Own nested repos under src/ (independent git repos, gitignored by cowork)
+    for repo in experiments matrix; do
+        if [[ -d "$COWORK_DIR/src/$repo" ]]; then
+            info "src/$repo already cloned."
+        else
+            git clone "git@github.com:Packetslave/${repo}.git" "$COWORK_DIR/src/$repo"
+        fi
+    done
 else
     info "cowork clone missing — skipping src/_external checkouts."
 fi
