@@ -335,6 +335,8 @@ alias p8='sudo mtr -z 8.8.8.8'
 alias crg='rg --color=always'
 alias cbat='bat --color=always'
 alias codex='echo WARNING - using stdio MCP wrapper script >&2; $HOME/src/SameBrain/Scripts/codex-mcp-stdio'
+alias tailscale=/Applications/Tailscale.app/Contents/MacOS/Tailscale
+alias taildrop='tailscale file cp'
 
 eval "$(starship init zsh)"
 
