@@ -263,6 +263,7 @@
           - mtr
           - neovim
           - nmap
+          - node # .mcp.json launches /opt/homebrew/bin/node; instapaper-mcp build needs npm
           - nvm
           - opencode
           - openjdk

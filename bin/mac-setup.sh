@@ -385,17 +385,46 @@ add_claude_plugin anthropics/claude-plugins-official claude-plugins-official git
 add_claude_plugin sweetrb/apple-notes-mcp apple-notes-mcp apple-notes
 add_claude_plugin ChromeDevTools/chrome-devtools-mcp chrome-devtools-plugins chrome-devtools-mcp
 
-# Statusline: script lives in dotfiles, symlinked into ~/.claude by ansible;
-# here we just make sure settings.json points at it
+# settings.json: seed defaults on a fresh machine (existing values win — the
+# left side of jq's + loses to what's already in the file), then point
+# statusLine at the dotfiles-owned script (symlinked into ~/.claude by ansible)
 mkdir -p "$HOME/.claude"
 CLAUDE_SETTINGS="$HOME/.claude/settings.json"
 [ -f "$CLAUDE_SETTINGS" ] || echo '{}' > "$CLAUDE_SETTINGS"
 jq --arg cmd "$HOME/.claude/statusline.sh" \
-    '. + {statusLine: {type: "command", command: $cmd}}' \
+    '{model: "claude-fable-5[1m]", theme: "dark", tui: "fullscreen"} + .
+     + {statusLine: {type: "command", command: $cmd}}' \
     "$CLAUDE_SETTINGS" > "$CLAUDE_SETTINGS.tmp" && mv -f "$CLAUDE_SETTINGS.tmp" "$CLAUDE_SETTINGS"
 
 # ---------------------------------------------------------------------------
-# 15. 1Password extension for Chrome (optional — Safari covers the bootstrap)
+# 15. Cowork external checkouts (src/_external/)
+# ---------------------------------------------------------------------------
+# Third-party code under src/_external/ isn't part of the cowork clone, so
+# each machine clones + builds it itself. A missing instapaper-mcp build
+# surfaces as /mcp reconnect error -32000 (bit johnny5's setup, then impulse).
+step "Cowork external checkouts"
+if [[ -d "$COWORK_DIR/.git" ]]; then
+    EXTERNAL_DIR="$COWORK_DIR/src/_external"
+    mkdir -p "$EXTERNAL_DIR"
+    if [[ -d "$EXTERNAL_DIR/claude-obsidian" ]]; then
+        info "claude-obsidian checkout already present."
+    else
+        git clone https://github.com/Packetslave/claude-obsidian "$EXTERNAL_DIR/claude-obsidian"
+    fi
+    if [[ ! -d "$EXTERNAL_DIR/instapaper-mcp" ]]; then
+        git clone https://github.com/hendronf/Instapaper-MCP "$EXTERNAL_DIR/instapaper-mcp"
+    fi
+    if [[ -f "$EXTERNAL_DIR/instapaper-mcp/build/index.js" ]]; then
+        info "instapaper-mcp already built."
+    else
+        (cd "$EXTERNAL_DIR/instapaper-mcp" && npm install && npm run build)
+    fi
+else
+    info "cowork clone missing — skipping src/_external checkouts."
+fi
+
+# ---------------------------------------------------------------------------
+# 16. 1Password extension for Chrome (optional — Safari covers the bootstrap)
 # ---------------------------------------------------------------------------
 step "1Password extension for Chrome"
 ONEPASSWORD_EXT_ID="aeblfdkhhhdcdjpifhhbdiojplfjncoa"
