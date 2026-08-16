@@ -52,6 +52,14 @@ wezterm.on('format-tab-title', function(tab)
 end)
 config.window_padding = { left = 8, right = 8, top = 4, bottom = 0 }
 
+-- Make URLs with bare (dotless) hostnames clickable, e.g. http://impulse:2015/…
+-- The default rules require a dotted domain, so Tailscale/LAN hostnames never match.
+config.hyperlink_rules = wezterm.default_hyperlink_rules()
+table.insert(config.hyperlink_rules, {
+  regex = [[\bhttps?://[\w.-]+(:\d+)?(/\S*)?]],
+  format = '$0',
+})
+
 -- Finally, return the configuration to wezterm:
 return config
 
