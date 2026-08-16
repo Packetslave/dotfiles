@@ -419,6 +419,14 @@ if [[ -d "$COWORK_DIR/.git" ]]; then
     else
         (cd "$EXTERNAL_DIR/instapaper-mcp" && npm install && npm run build)
     fi
+    if [[ ! -d "$EXTERNAL_DIR/omnifocus-cli" ]]; then
+        git clone git@github.com:Packetslave/omnifocus-cli.git "$EXTERNAL_DIR/omnifocus-cli"
+    fi
+    if [[ -f "$EXTERNAL_DIR/omnifocus-cli/dist/cli.js" ]]; then
+        info "omnifocus-cli already built."
+    else
+        (cd "$EXTERNAL_DIR/omnifocus-cli" && bun install && bun run build)
+    fi
 else
     info "cowork clone missing — skipping src/_external checkouts."
 fi
