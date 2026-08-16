@@ -379,6 +379,20 @@ add_claude_plugin() {
 }
 add_claude_plugin Packetslave/claude-obsidian agricidaniel-claude-obsidian claude-obsidian
 add_claude_plugin mattpocock/skills mattpocock mattpocock-skills
+add_claude_plugin anthropics/claude-plugins-official claude-plugins-official frontend-design
+add_claude_plugin anthropics/claude-plugins-official claude-plugins-official playwright
+add_claude_plugin anthropics/claude-plugins-official claude-plugins-official github
+add_claude_plugin sweetrb/apple-notes-mcp apple-notes-mcp apple-notes
+add_claude_plugin ChromeDevTools/chrome-devtools-mcp chrome-devtools-plugins chrome-devtools-mcp
+
+# Statusline: script lives in dotfiles, symlinked into ~/.claude by ansible;
+# here we just make sure settings.json points at it
+mkdir -p "$HOME/.claude"
+CLAUDE_SETTINGS="$HOME/.claude/settings.json"
+[ -f "$CLAUDE_SETTINGS" ] || echo '{}' > "$CLAUDE_SETTINGS"
+jq --arg cmd "$HOME/.claude/statusline.sh" \
+    '. + {statusLine: {type: "command", command: $cmd}}' \
+    "$CLAUDE_SETTINGS" > "$CLAUDE_SETTINGS.tmp" && mv -f "$CLAUDE_SETTINGS.tmp" "$CLAUDE_SETTINGS"
 
 # ---------------------------------------------------------------------------
 # 15. 1Password extension for Chrome (optional — Safari covers the bootstrap)

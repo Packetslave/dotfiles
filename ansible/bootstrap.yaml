@@ -172,6 +172,17 @@
         state: link
         force: true
 
+    - name: Create links - claude dir
+      ansible.builtin.file:
+        path: ~/.claude
+        state: directory
+    - name: Create links - claude statusline
+      ansible.builtin.file:
+        src: ~/dotfiles/claude/statusline.sh
+        dest: ~/.claude/statusline.sh
+        state: link
+        force: true
+
     # Homebrew 6 refuses to load formulae/casks from untrusted third-party
     # taps in non-interactive runs — trust them before tapping/installing
     - name: Trust third-party homebrew taps
@@ -291,6 +302,7 @@
           - 1password-cli
           - agentsview
           - alfred
+          - claude # Claude Desktop
           - claude-code
           - cursor
           - darrylmorley/whatcable/whatcable
