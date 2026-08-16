@@ -1,0 +1,6 @@
+# Managed by dotfiles (~/dotfiles/yt-dlp/config -> ~/.config/yt-dlp/config).
+# Allow yt-dlp to fetch its official EJS challenge-solver script from yt-dlp's
+# GitHub releases — required since YouTube's 2026 "n challenge" changes;
+# without it, YouTube downloads fail with HTTP 403. The solver runs in a local
+# JS runtime (deno preferred). https://github.com/yt-dlp/yt-dlp/wiki/EJS
+--remote-components ejs:github

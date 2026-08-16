@@ -83,6 +83,19 @@
         dest: ~/.config/eza
         state: link
 
+    # Opts in to yt-dlp's EJS challenge solver (needs deno, installed below) —
+    # without it YouTube downloads 403 since the 2026 "n challenge" changes
+    - name: Create links - yt-dlp config dir
+      ansible.builtin.file:
+        path: ~/.config/yt-dlp
+        state: directory
+    - name: Create links - yt-dlp config
+      ansible.builtin.file:
+        src: ~/dotfiles/yt-dlp/config
+        dest: ~/.config/yt-dlp/config
+        state: link
+        force: true
+
     - name: Create links - ghostty config dir
       ansible.builtin.file:
         path: ~/.config/ghostty
@@ -227,6 +240,7 @@
           - colima
           - coreutils
           - csvkit
+          - deno # JS runtime for yt-dlp's EJS challenge solver
           - docker
           - docker-compose
           - dockutil
