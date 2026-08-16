@@ -13,14 +13,14 @@
 #   ./mac-setup.sh
 #
 # Override any of the defaults below via environment variables, e.g.:
-#   DOTFILES_REPO=packetslave/dotfiles PLAYBOOK=ansible/bootstrap.yaml ./mac-setup.sh
+#   DOTFILES_REPO=Packetslave/dotfiles PLAYBOOK=ansible/bootstrap.yaml ./mac-setup.sh
 
 set -euo pipefail
 
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
-GITHUB_USER="${GITHUB_USER:-packetslave}"
+GITHUB_USER="${GITHUB_USER:-Packetslave}"
 DOTFILES_REPO="${DOTFILES_REPO:-${GITHUB_USER}/dotfiles}"   # owner/name on GitHub
 DOTFILES_DIR="${DOTFILES_DIR:-$HOME/dotfiles}"
 PLAYBOOK="${PLAYBOOK:-ansible/bootstrap.yaml}"               # path relative to DOTFILES_DIR
