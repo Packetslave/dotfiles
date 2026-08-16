@@ -422,11 +422,24 @@ if [[ -d "$COWORK_DIR/.git" ]]; then
     if [[ ! -d "$EXTERNAL_DIR/omnifocus-cli" ]]; then
         git clone git@github.com:Packetslave/omnifocus-cli.git "$EXTERNAL_DIR/omnifocus-cli"
     fi
+    # Drop/undrop support (upstream PR #44) lives on this branch; a main-branch
+    # build silently lacks --drop (bit impulse, 2026-08-15).
+    OF_BRANCH="feature/task-drop-support"
+    if [[ "$(git -C "$EXTERNAL_DIR/omnifocus-cli" rev-parse --abbrev-ref HEAD)" != "$OF_BRANCH" ]]; then
+        git -C "$EXTERNAL_DIR/omnifocus-cli" fetch origin "$OF_BRANCH"
+        git -C "$EXTERNAL_DIR/omnifocus-cli" checkout "$OF_BRANCH"
+        rm -f "$EXTERNAL_DIR/omnifocus-cli/dist/cli.js"  # force rebuild after branch switch
+    fi
     if [[ -f "$EXTERNAL_DIR/omnifocus-cli/dist/cli.js" ]]; then
         info "omnifocus-cli already built."
     else
         (cd "$EXTERNAL_DIR/omnifocus-cli" && bun install && bun run build)
     fi
+    # The omnifocus skill invokes ~/.bun/bin/of by absolute path; point it at
+    # the fork build. (A bun/npm install of the stock package would silently
+    # clobber this symlink — re-run this section if drop/undrop stops working.)
+    mkdir -p "$HOME/.bun/bin"
+    ln -sf "$EXTERNAL_DIR/omnifocus-cli/dist/cli.js" "$HOME/.bun/bin/of"
 
     # Own nested repos under src/ (independent git repos, gitignored by cowork)
     for repo in experiments matrix; do
