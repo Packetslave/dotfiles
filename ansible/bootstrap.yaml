@@ -12,6 +12,36 @@
   # no pip packages inside Homebrew ansible's private virtualenv
   vars:
     ansible_become_pass: "{{ lookup('pipe', 'security find-generic-password -s ansible-sudo -w') }}"
+    homebrew_taps:
+      - agavra/tap
+      - darrylmorley/whatcable
+      - felixkratz/formulae
+      - nikitabobko/tap
+    homebrew_casks:
+      - 1password-cli
+      - agentsview
+      - alfred
+      - claude # Claude Desktop
+      - claude-code
+      - cursor
+      - darrylmorley/whatcable/whatcable
+      - dropbox
+      - fantastical
+      - font-monaspace-nf
+      - gcloud-cli
+      - github # GitHub Desktop
+      - karabiner-elements
+      - keyboard-maestro
+      - macparakeet
+      - nikitabobko/tap/aerospace
+      - obsidian
+      - omnifocus
+      - raycast
+      - thunderbird
+      - visual-studio-code
+      - vlc
+      - wezterm@nightly
+      - wispr-flow
 
   tasks:
     - name: Create links - tmux dir
@@ -197,32 +227,40 @@
         force: true
 
     # Homebrew 6 refuses to load formulae/casks from untrusted third-party
-    # taps in non-interactive runs — trust them before tapping/installing
+    # taps in non-interactive runs. Trust the playbook's taps plus anything
+    # already tapped on this machine (migrated state, vendor CLIs that
+    # auto-tap) — an untrusted tap anywhere makes brew runs noisy and its
+    # formulae silently uninstallable.
+    - name: List installed homebrew taps
+      ansible.builtin.command:
+        cmd: brew tap
+      register: installed_taps
+      changed_when: false
+
     - name: Trust third-party homebrew taps
       ansible.builtin.command:
-        argv:
-          - brew
-          - trust
-          - --tap
-          - agavra/tap
-          - felixkratz/formulae
-          - nikitabobko/tap
-          - darrylmorley/whatcable
+        argv: "{{ ['brew', 'trust', '--tap'] + third_party_taps }}"
+      vars:
+        third_party_taps: >-
+          {{ (homebrew_taps
+              + (installed_taps.stdout_lines | map('trim')
+                 | select('match', '.+/.+')
+                 | reject('match', '^homebrew/') | list))
+             | unique }}
       changed_when: false
 
     - name: Add homebrew taps
       community.general.homebrew_tap:
-        name:
-          - agavra/tap
-          - darrylmorley/whatcable
-          - felixkratz/formulae
-          - nikitabobko/tap
+        name: "{{ homebrew_taps }}"
         state: present
 
     # Explicitly installed formulae only (installed_on_request per
-    # `brew info --json=v2 --installed`) — dependencies are left to brew
+    # `brew info --json=v2 --installed`) — dependencies are left to brew.
+    # update_homebrew keeps formula/cask definitions fresh so upstream
+    # fixes to broken casks are picked up on the next run.
     - name: Install packages with homebrew
       community.general.homebrew:
+        update_homebrew: true
         name:
           - age
           - age-plugin-se
@@ -311,39 +349,38 @@
           - zoxide
         state: present
 
+    # Fast path: one batch install. If any single cask is broken upstream
+    # (e.g. obsidian's missing obsidian-cli symlink source), the batch
+    # aborts mid-list — the rescue reruns per cask so one bad definition
+    # can't block the rest, then reports what failed without killing the run.
     - name: Install casks with homebrew
-      community.general.homebrew_cask:
-        name:
-          - 1password-cli
-          - agentsview
-          - alfred
-          - claude # Claude Desktop
-          - claude-code
-          - cursor
-          - darrylmorley/whatcable/whatcable
-          - dropbox
-          - fantastical
-          - font-monaspace-nf
-          - gcloud-cli
-          - github # GitHub Desktop
-          - karabiner-elements
-          - keyboard-maestro
-          - macparakeet
-          - nikitabobko/tap/aerospace
-          - obsidian
-          - omnifocus
-          - raycast
-          - thunderbird
-          - visual-studio-code
-          - vlc
-          - wezterm@nightly
-          - wispr-flow
-        state: present
-        # --adopt: take over an identical app already in /Applications
-        # (e.g. installed manually before the playbook ran) instead of
-        # erroring; no-op when absent or already brew-managed
-        install_options: adopt
-        sudo_password: "{{ ansible_become_pass }}"
+      block:
+        - name: Install casks with homebrew (batch)
+          community.general.homebrew_cask:
+            name: "{{ homebrew_casks }}"
+            state: present
+            # --adopt: take over an identical app already in /Applications
+            # (e.g. installed manually before the playbook ran) instead of
+            # erroring; no-op when absent or already brew-managed
+            install_options: adopt
+            sudo_password: "{{ ansible_become_pass }}"
+      rescue:
+        - name: Install casks individually (batch failed)
+          community.general.homebrew_cask:
+            name: "{{ item }}"
+            state: present
+            install_options: adopt
+            sudo_password: "{{ ansible_become_pass }}"
+          loop: "{{ homebrew_casks }}"
+          register: cask_results
+          ignore_errors: true
+
+        - name: Report broken casks
+          ansible.builtin.debug:
+            msg: >-
+              Casks that failed to install:
+              {{ cask_results.results | selectattr('failed', 'defined')
+                 | selectattr('failed') | map(attribute='item') | list }}
 
     # Requires being signed in to the App Store (mac-setup.sh gates on that
     # during the 1Password-for-Safari install)
