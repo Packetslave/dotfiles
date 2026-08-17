@@ -69,6 +69,7 @@
       - llama.cpp
       - mactop
       - marp-cli
+      - mas # needed by the App Store install task below
       - mosh
       - mtr
       - neovim
