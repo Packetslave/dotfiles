@@ -138,8 +138,21 @@
       - vlc
       - wezterm@nightly
       - wispr-flow
+    # Claude tooling is not allowed on Reddit-managed machines
+    # (detected via /opt/reddit) — filtered out of the cask list below,
+    # and the ~/.claude link tasks are skipped
+    claude_casks:
+      - claude
+      - claude-code
+    homebrew_casks_allowed: >-
+      {{ homebrew_casks | difference(claude_casks)
+         if reddit_machine.stat.exists else homebrew_casks }}
 
   tasks:
+    - name: Check for a Reddit-managed machine
+      ansible.builtin.stat:
+        path: /opt/reddit
+      register: reddit_machine
     - name: Create links - tmux dir
       ansible.builtin.file:
         path: ~/.tmux
@@ -315,12 +328,14 @@
       ansible.builtin.file:
         path: ~/.claude
         state: directory
+      when: not reddit_machine.stat.exists
     - name: Create links - claude statusline
       ansible.builtin.file:
         src: ~/dotfiles/claude/statusline.sh
         dest: ~/.claude/statusline.sh
         state: link
         force: true
+      when: not reddit_machine.stat.exists
 
     # Homebrew 6 refuses to load formulae/casks from untrusted third-party
     # taps in non-interactive runs. Trust the playbook's taps plus anything
@@ -386,7 +401,7 @@
       block:
         - name: Install casks with homebrew (batch)
           community.general.homebrew_cask:
-            name: "{{ homebrew_casks }}"
+            name: "{{ homebrew_casks_allowed }}"
             state: present
             # --adopt: take over an identical app already in /Applications
             # (e.g. installed manually before the playbook ran) instead of
@@ -400,7 +415,7 @@
             state: present
             install_options: adopt
             sudo_password: "{{ ansible_become_pass }}"
-          loop: "{{ homebrew_casks }}"
+          loop: "{{ homebrew_casks_allowed }}"
           register: cask_results
           ignore_errors: true
 
