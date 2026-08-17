@@ -417,14 +417,18 @@
     # crashes on the empty line mas 2.x prints when no apps are installed.
     - name: List installed App Store apps
       ansible.builtin.command:
-        cmd: mas list
+        cmd: /opt/homebrew/bin/mas list
       register: mas_list
       changed_when: false
 
+    # become: mas 2.x invokes sudo internally to install, and in a
+    # non-interactive run that inner sudo has no terminal to prompt on —
+    # running mas as root makes it a passwordless no-op
     - name: Install Mac App Store apps with mas
+      become: true
       ansible.builtin.command:
         argv:
-          - mas
+          - /opt/homebrew/bin/mas
           - install
           - "{{ item.id }}"
       loop: "{{ mas_apps }}"
