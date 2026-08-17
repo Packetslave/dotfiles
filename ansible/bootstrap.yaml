@@ -17,6 +17,94 @@
       - darrylmorley/whatcable
       - felixkratz/formulae
       - nikitabobko/tap
+    # Explicitly installed formulae only (installed_on_request per
+    # `brew info --json=v2 --installed`) — dependencies are left to brew
+    homebrew_formulae:
+      - age
+      - age-plugin-se
+      - agavra/tap/tuicr
+      - ansible
+      - atuin
+      - bat
+      - bat-extras
+      - beads
+      - btop
+      - bun
+      - caddy
+      - cloc
+      - cmark-gfm
+      - colima
+      - coreutils
+      - csvkit
+      - deno # JS runtime for yt-dlp's EJS challenge solver
+      - docker
+      - docker-compose
+      - dockutil
+      - doggo
+      - duti
+      - eza
+      - fd
+      - felixkratz/formulae/borders
+      - felixkratz/formulae/sketchybar
+      - ffmpeg
+      - firebase-cli
+      - fzf
+      - gh
+      - git
+      - git-delta
+      - git-extras
+      - glow
+      - go
+      - grafanactl
+      - grpcurl
+      - hugo
+      - hunk
+      - iperf3
+      - jq
+      - k9s
+      - kubernetes-cli
+      - kubetail
+      - lazydocker
+      - librsvg
+      - llama.cpp
+      - mactop
+      - marp-cli
+      - mosh
+      - mtr
+      - neovim
+      - nmap
+      - node # .mcp.json launches /opt/homebrew/bin/node; instapaper-mcp build needs npm
+      - nvm
+      - opencode
+      - openjdk
+      - pam-reattach
+      - poppler
+      - posting
+      - powerlevel10k
+      - protoc-gen-go
+      - protoc-gen-go-grpc
+      - pv
+      - pygments
+      - rclone
+      - rename
+      - restic
+      - ripgrep
+      - rsync
+      - rustup
+      - sesh
+      - shellcheck
+      - sops
+      - starship
+      - stern
+      - superfile
+      - tfenv
+      - tig
+      - tmux
+      - tmuxinator
+      - uv
+      - yq
+      - yt-dlp
+      - zoxide
     homebrew_casks:
       - 1password-cli
       - agentsview
@@ -254,100 +342,33 @@
         name: "{{ homebrew_taps }}"
         state: present
 
-    # Explicitly installed formulae only (installed_on_request per
-    # `brew info --json=v2 --installed`) — dependencies are left to brew.
+    # Fast path: one batch install, same pattern as the casks below. On
+    # failure the rescue reruns per formula so one broken formula can't
+    # block the rest, then reports what failed without killing the run.
     # update_homebrew keeps formula/cask definitions fresh so upstream
-    # fixes to broken casks are picked up on the next run.
+    # fixes to broken packages are picked up on the next run.
     - name: Install packages with homebrew
-      community.general.homebrew:
-        update_homebrew: true
-        name:
-          - age
-          - age-plugin-se
-          - agavra/tap/tuicr
-          - ansible
-          - atuin
-          - bat
-          - bat-extras
-          - beads
-          - btop
-          - bun
-          - caddy
-          - cloc
-          - cmark-gfm
-          - colima
-          - coreutils
-          - csvkit
-          - deno # JS runtime for yt-dlp's EJS challenge solver
-          - docker
-          - docker-compose
-          - dockutil
-          - doggo
-          - duti
-          - eza
-          - fd
-          - felixkratz/formulae/borders
-          - felixkratz/formulae/sketchybar
-          - ffmpeg
-          - firebase-cli
-          - fzf
-          - gh
-          - git
-          - git-delta
-          - git-extras
-          - glow
-          - go
-          - grafanactl
-          - grpcurl
-          - hugo
-          - hunk
-          - iperf3
-          - jq
-          - k9s
-          - kubernetes-cli
-          - kubetail
-          - lazydocker
-          - librsvg
-          - llama.cpp
-          - mactop
-          - marp-cli
-          - mosh
-          - mtr
-          - neovim
-          - nmap
-          - node # .mcp.json launches /opt/homebrew/bin/node; instapaper-mcp build needs npm
-          - nvm
-          - opencode
-          - openjdk
-          - pam-reattach
-          - poppler
-          - posting
-          - powerlevel10k
-          - protoc-gen-go
-          - protoc-gen-go-grpc
-          - pv
-          - pygments
-          - rclone
-          - rename
-          - restic
-          - ripgrep
-          - rsync
-          - rustup
-          - sesh
-          - shellcheck
-          - sops
-          - starship
-          - stern
-          - superfile
-          - tfenv
-          - tig
-          - tmux
-          - tmuxinator
-          - uv
-          - yq
-          - yt-dlp
-          - zoxide
-        state: present
+      block:
+        - name: Install packages with homebrew (batch)
+          community.general.homebrew:
+            update_homebrew: true
+            name: "{{ homebrew_formulae }}"
+            state: present
+      rescue:
+        - name: Install packages individually (batch failed)
+          community.general.homebrew:
+            name: "{{ item }}"
+            state: present
+          loop: "{{ homebrew_formulae }}"
+          register: formula_results
+          ignore_errors: true
+
+        - name: Report broken formulae
+          ansible.builtin.debug:
+            msg: >-
+              Formulae that failed to install:
+              {{ formula_results.results | selectattr('failed', 'defined')
+                 | selectattr('failed') | map(attribute='item') | list }}
 
     # Fast path: one batch install. If any single cask is broken upstream
     # (e.g. obsidian's missing obsidian-cli symlink source), the batch
