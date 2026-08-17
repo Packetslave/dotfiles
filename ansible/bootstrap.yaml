@@ -106,6 +106,13 @@
       - yq
       - yt-dlp
       - zoxide
+    mas_apps:
+      - { id: 1586435171, name: Actions }
+      - { id: 1659667937, name: Actions For Obsidian }
+      - { id: 1453273600, name: Data Jar }
+      - { id: 6463440793, name: Menu Box }
+      - { id: 6757681819, name: QuickMD }
+      - { id: 6747908871, name: Telescopo Markdown Studio }
     homebrew_casks:
       - 1password-cli
       - agentsview
@@ -405,17 +412,30 @@
                  | selectattr('failed') | map(attribute='item') | list }}
 
     # Requires being signed in to the App Store (mac-setup.sh gates on that
-    # during the 1Password-for-Safari install)
+    # during the 1Password-for-Safari install). Drives the mas CLI directly:
+    # the community.general.mas module int()-parses `mas list` output and
+    # crashes on the empty line mas 2.x prints when no apps are installed.
+    - name: List installed App Store apps
+      ansible.builtin.command:
+        cmd: mas list
+      register: mas_list
+      changed_when: false
+
     - name: Install Mac App Store apps with mas
-      community.general.mas:
-        id:
-          - 1586435171 # Actions
-          - 1659667937 # Actions For Obsidian
-          - 1453273600 # Data Jar
-          - 6463440793 # Menu Box
-          - 6757681819 # QuickMD
-          - 6747908871 # Telescopo Markdown Studio
-        state: present
+      ansible.builtin.command:
+        argv:
+          - mas
+          - install
+          - "{{ item.id }}"
+      loop: "{{ mas_apps }}"
+      loop_control:
+        label: "{{ item.name }}"
+      vars:
+        installed_ids: >-
+          {{ mas_list.stdout_lines | map('trim')
+             | select('match', '^[0-9]+')
+             | map('split') | map('first') | list }}
+      when: (item.id | string) not in installed_ids
 
     # Touch ID for sudo, update-proof (sudo_local survives macOS updates);
     # pam_reattach makes it work inside tmux/screen, ignore_ssh keeps SSH
