@@ -126,6 +126,7 @@
       - font-monaspace-nf
       - gcloud-cli
       - github # GitHub Desktop
+      - hammerspoon
       - karabiner-elements
       - keyboard-maestro
       - macparakeet
@@ -253,6 +254,14 @@
       ansible.builtin.file:
         src: ~/dotfiles/karabiner
         dest: ~/.config/karabiner
+        state: link
+        force: true
+
+    # Hammerspoon reads ~/.hammerspoon/init.lua — link the whole directory
+    - name: Create links - hammerspoon config dir
+      ansible.builtin.file:
+        src: ~/dotfiles/hammerspoon
+        dest: ~/.hammerspoon
         state: link
         force: true
 
