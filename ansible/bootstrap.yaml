@@ -189,22 +189,26 @@
         state: present
 
     # Local web server on :2015 (see configs/README.md in the cowork repo).
-    # The canonical Caddyfile lives in cowork, so these tasks are skipped
-    # until that repo has been cloned (mac-setup.sh does the clone).
-    - name: Check for the canonical Caddyfile in the cowork repo
+    # The canonical Caddyfile template lives in cowork, so these tasks are
+    # skipped until that repo has been cloned (mac-setup.sh does the clone).
+    - name: Check for the canonical Caddyfile template in the cowork repo
       ansible.builtin.stat:
-        path: "{{ ansible_facts.env.HOME }}/src/cowork/configs/Caddyfile"
+        path: "{{ ansible_facts.env.HOME }}/src/cowork/configs/Caddyfile.j2"
       register: cowork_caddyfile
 
     - name: Install the canonical Caddyfile
       when: cowork_caddyfile.stat.exists
-      ansible.builtin.copy:
+      ansible.builtin.template:
         src: "{{ cowork_caddyfile.stat.path }}"
         dest: "{{ homebrew_prefix }}/etc/Caddyfile"
         mode: "0644"
         # --adapter is required: the validation temp file isn't named
         # "Caddyfile", so caddy would otherwise assume JSON config
         validate: "{{ homebrew_prefix }}/bin/caddy validate --adapter caddyfile --config %s"
+      vars:
+        # root must be a literal absolute path — brew services overrides HOME,
+        # so a {$HOME} placeholder in the Caddyfile would resolve wrong
+        cowork_root: "{{ ansible_facts.env.HOME }}/src/cowork"
       notify: Restart Caddy
 
     - name: Check whether caddy is running as a brew service
