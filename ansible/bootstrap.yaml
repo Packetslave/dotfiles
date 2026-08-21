@@ -134,6 +134,8 @@
       - obsidian
       - omnifocus
       - raycast
+      - slack
+      - slack-cli
       - thunderbird
       - visual-studio-code
       - vlc
