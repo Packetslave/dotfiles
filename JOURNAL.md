@@ -14,8 +14,20 @@
   `cowork_root` through the same `caddy validate --adapter caddyfile`
   the real task uses; both passed.
 - Updated cowork configs/README.md install section (old cp+sed
-  instructions were superseded). Changes in cowork are uncommitted on
-  main (Caddyfile deletion staged via git rm, .j2 untracked).
+  instructions were superseded). Committed and pushed in both repos
+  (dotfiles a55de5f, cowork b2dd630).
+- Rolled out to seaside: its installed Caddyfile still had the macOS
+  root (caddy was silently serving a nonexistent path). Cause: the
+  seaside ~/src/cowork clone was behind — installed configs never
+  self-update, and a stale *source* clone is a second way to be stale.
+  `git pull` in cowork + `ansible-playbook ansible/bootstrap.yaml`
+  fixed it; verified the md-viewer rewrite and ?raw=1 over :2015.
+- Confirmed the HOME-override gotcha exists on Linux too: brew's
+  generated systemd unit runs caddy with
+  HOME=/home/linuxbrew/.linuxbrew/var/lib, so `root` must stay a
+  rendered literal on both platforms. macOS machines (lunchbox,
+  impulse, johnny5, studio) pick up the template on their next
+  bootstrap run.
 
 ## 2026-08-21 — cross-platform bootstrap (Linux support)
 
