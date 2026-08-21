@@ -47,7 +47,6 @@
       - felixkratz/formulae/sketchybar
       - ffmpeg
       - firebase-cli
-      - fzf
       - gh
       - git
       - git-delta
@@ -94,7 +93,6 @@
       - sesh
       - shellcheck
       - sops
-      - starship
       - stern
       - superfile
       - tfenv
@@ -104,7 +102,6 @@
       - uv
       - yq
       - yt-dlp
-      - zoxide
     mas_apps:
       - { id: 1586435171, name: Actions }
       - { id: 1659667937, name: Actions For Obsidian }

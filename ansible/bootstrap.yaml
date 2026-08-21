@@ -18,6 +18,9 @@
     homebrew_common_formulae:
       - beads
       - caddy
+      - fzf
+      - starship
+      - zoxide
     homebrew_prefix: >-
       {{ '/opt/homebrew' if ansible_facts['system'] == 'Darwin'
          else '/home/linuxbrew/.linuxbrew' }}
