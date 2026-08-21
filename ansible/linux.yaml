@@ -1,0 +1,40 @@
+# Linux-specific setup — imported from bootstrap.yaml on Linux, but also
+# runnable standalone: ansible-playbook ansible/linux.yaml
+# Cross-platform symlinks live in bootstrap.yaml; grow this playbook with
+# distro package installs and other Linux-only setup as needed.
+- name: Configure Linux
+  hosts: localhost
+  connection: local
+
+  tasks:
+    # Same links as macos.yaml makes, at the Linux VS Code config path
+    - name: Create links - vscode dir
+      ansible.builtin.file:
+        path: ~/.config/Code/User
+        state: directory
+    - name: Create links - vscode
+      ansible.builtin.file:
+        src: ~/dotfiles/vscode/settings.json
+        dest: ~/.config/Code/User/settings.json
+        state: link
+        force: true
+    - name: Create links - vscode keybindings
+      ansible.builtin.file:
+        src: ~/dotfiles/vscode/keybindings.json
+        dest: ~/.config/Code/User/keybindings.json
+        state: link
+        force: true
+
+    # brew services on Linux run as systemd user units, which are stopped at
+    # logout unless lingering is enabled — without this, caddy (started in
+    # bootstrap.yaml) dies as soon as the login session ends
+    - name: Check whether user lingering is enabled
+      ansible.builtin.command:
+        cmd: loginctl show-user {{ ansible_facts['user_id'] }} --property=Linger
+      register: linger_state
+      changed_when: false
+
+    - name: Enable lingering so brew services survive logout
+      ansible.builtin.command:
+        cmd: loginctl enable-linger {{ ansible_facts['user_id'] }}
+      when: (linger_state.stdout | trim) != 'Linger=yes'

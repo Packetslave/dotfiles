@@ -1,0 +1,448 @@
+# macOS-specific setup — imported from bootstrap.yaml on Darwin, but also
+# runnable standalone: ansible-playbook ansible/macos.yaml (with the same
+# OBJC_DISABLE_INITIALIZE_FORK_SAFETY/OS_ACTIVITY_MODE env vars).
+# The sudo password is read from the login keychain — seed it once:
+#   security add-generic-password -s ansible-sudo -a "$USER" -w
+- name: Configure macOS
+  hosts: localhost
+  connection: local
+
+  # security(1) is built into macOS, so unlike the keyring lookup this needs
+  # no pip packages inside Homebrew ansible's private virtualenv
+  vars:
+    ansible_become_pass: "{{ lookup('pipe', 'security find-generic-password -s ansible-sudo -w') }}"
+    homebrew_taps:
+      - agavra/tap
+      - darrylmorley/whatcable
+      - felixkratz/formulae
+      - nikitabobko/tap
+    # Explicitly installed formulae only (installed_on_request per
+    # `brew info --json=v2 --installed`) — dependencies are left to brew.
+    # Cross-platform formulae live in bootstrap.yaml's
+    # homebrew_common_formulae, not here.
+    homebrew_formulae:
+      - age
+      - age-plugin-se
+      - agavra/tap/tuicr
+      - ansible
+      - atuin
+      - bat
+      - bat-extras
+      - btop
+      - bun
+      - cloc
+      - cmark-gfm
+      - colima
+      - coreutils
+      - csvkit
+      - deno # JS runtime for yt-dlp's EJS challenge solver
+      - docker
+      - docker-compose
+      - dockutil
+      - doggo
+      - duti
+      - eza
+      - fd
+      - felixkratz/formulae/borders
+      - felixkratz/formulae/sketchybar
+      - ffmpeg
+      - firebase-cli
+      - fzf
+      - gh
+      - git
+      - git-delta
+      - git-extras
+      - glow
+      - go
+      - grafanactl
+      - grpcurl
+      - hugo
+      - hunk
+      - iperf3
+      - jq
+      - k9s
+      - kubernetes-cli
+      - kubetail
+      - lazydocker
+      - librsvg
+      - llama.cpp
+      - mactop
+      - marp-cli
+      - mas # needed by the App Store install task below
+      - mosh
+      - mtr
+      - neovim
+      - nmap
+      - node # .mcp.json launches /opt/homebrew/bin/node; instapaper-mcp build needs npm
+      - nvm
+      - opencode
+      - openjdk
+      - pam-reattach
+      - poppler
+      - posting
+      - powerlevel10k
+      - protoc-gen-go
+      - protoc-gen-go-grpc
+      - pv
+      - pygments
+      - rclone
+      - rename
+      - restic
+      - ripgrep
+      - rsync
+      - rustup
+      - sesh
+      - shellcheck
+      - sops
+      - starship
+      - stern
+      - superfile
+      - tfenv
+      - tig
+      - tmux
+      - tmuxinator
+      - uv
+      - yq
+      - yt-dlp
+      - zoxide
+    mas_apps:
+      - { id: 1586435171, name: Actions }
+      - { id: 1659667937, name: Actions For Obsidian }
+      - { id: 1453273600, name: Data Jar }
+      - { id: 6463440793, name: Menu Box }
+      - { id: 6757681819, name: QuickMD }
+      - { id: 6747908871, name: Telescopo Markdown Studio }
+    homebrew_casks:
+      - 1password-cli
+      - agentsview
+      - alfred
+      - claude # Claude Desktop
+      - claude-code
+      - cursor
+      - darrylmorley/whatcable/whatcable
+      - dropbox
+      - fantastical
+      - font-monaspace-nf
+      - gcloud-cli
+      - github # GitHub Desktop
+      - hammerspoon
+      - karabiner-elements
+      - keyboard-maestro
+      - macparakeet
+      - nikitabobko/tap/aerospace
+      - obsidian
+      - omnifocus
+      - raycast
+      - slack
+      - slack-cli
+      - thunderbird
+      - visual-studio-code
+      - vlc
+      - wezterm@nightly
+      - wispr-flow
+    # Claude tooling is not allowed on Reddit-managed machines
+    # (detected via /opt/reddit) — filtered out of the cask list below;
+    # bootstrap.yaml also skips the ~/.claude link tasks
+    claude_casks:
+      - claude
+      - claude-code
+    homebrew_casks_allowed: >-
+      {{ homebrew_casks | difference(claude_casks)
+         if reddit_machine.stat.exists else homebrew_casks }}
+
+  tasks:
+    # Also checked in bootstrap.yaml — repeated here so this playbook
+    # stays runnable standalone
+    - name: Check for a Reddit-managed machine
+      ansible.builtin.stat:
+        path: /opt/reddit
+      register: reddit_machine
+
+    # Karabiner saves karabiner.json via atomic rename, which replaces a file
+    # symlink with a regular file — link the whole directory instead
+    - name: Create links - karabiner config dir
+      ansible.builtin.file:
+        src: ~/dotfiles/karabiner
+        dest: ~/.config/karabiner
+        state: link
+        force: true
+
+    # Hammerspoon reads ~/.hammerspoon/init.lua — link the whole directory
+    - name: Create links - hammerspoon config dir
+      ansible.builtin.file:
+        src: ~/dotfiles/hammerspoon
+        dest: ~/.hammerspoon
+        state: link
+        force: true
+
+    - name: Create links - aerospace config
+      ansible.builtin.file:
+        src: ~/dotfiles/aerospace/aerospace.toml
+        dest: ~/.aerospace.toml
+        state: link
+        force: true
+
+    - name: Create links - vscode dir
+      ansible.builtin.file:
+        path: "~/Library/Application Support/Code/User/"
+        state: directory
+    - name: Create links - vscode
+      ansible.builtin.file:
+        src: ~/dotfiles/vscode/settings.json
+        dest: "~/Library/Application Support/Code/User/settings.json"
+        state: link
+        force: true
+    - name: Create links - vscode keybindings
+      ansible.builtin.file:
+        src: ~/dotfiles/vscode/keybindings.json
+        dest: "~/Library/Application Support/Code/User/keybindings.json"
+        state: link
+        force: true
+
+    # Homebrew 6 refuses to load formulae/casks from untrusted third-party
+    # taps in non-interactive runs. Trust the playbook's taps plus anything
+    # already tapped on this machine (migrated state, vendor CLIs that
+    # auto-tap) — an untrusted tap anywhere makes brew runs noisy and its
+    # formulae silently uninstallable.
+    - name: List installed homebrew taps
+      ansible.builtin.command:
+        cmd: brew tap
+      register: installed_taps
+      changed_when: false
+
+    - name: Trust third-party homebrew taps
+      ansible.builtin.command:
+        argv: "{{ ['brew', 'trust', '--tap'] + third_party_taps }}"
+      vars:
+        third_party_taps: >-
+          {{ (homebrew_taps
+              + (installed_taps.stdout_lines | map('trim')
+                 | select('match', '.+/.+')
+                 | reject('match', '^homebrew/') | list))
+             | unique }}
+      changed_when: false
+
+    - name: Add homebrew taps
+      community.general.homebrew_tap:
+        name: "{{ homebrew_taps }}"
+        state: present
+
+    # Fast path: one batch install, same pattern as the casks below. On
+    # failure the rescue reruns per formula so one broken formula can't
+    # block the rest, then reports what failed without killing the run.
+    # update_homebrew keeps formula/cask definitions fresh so upstream
+    # fixes to broken packages are picked up on the next run.
+    - name: Install packages with homebrew
+      block:
+        - name: Install packages with homebrew (batch)
+          community.general.homebrew:
+            update_homebrew: true
+            name: "{{ homebrew_formulae }}"
+            state: present
+      rescue:
+        - name: Install packages individually (batch failed)
+          community.general.homebrew:
+            name: "{{ item }}"
+            state: present
+          loop: "{{ homebrew_formulae }}"
+          register: formula_results
+          ignore_errors: true
+
+        - name: Report broken formulae
+          ansible.builtin.debug:
+            msg: >-
+              Formulae that failed to install:
+              {{ formula_results.results | selectattr('failed', 'defined')
+                 | selectattr('failed') | map(attribute='item') | list }}
+
+    # Fast path: one batch install. If any single cask is broken upstream
+    # (e.g. obsidian's missing obsidian-cli symlink source), the batch
+    # aborts mid-list — the rescue reruns per cask so one bad definition
+    # can't block the rest, then reports what failed without killing the run.
+    - name: Install casks with homebrew
+      block:
+        - name: Install casks with homebrew (batch)
+          community.general.homebrew_cask:
+            name: "{{ homebrew_casks_allowed }}"
+            state: present
+            # --adopt: take over an identical app already in /Applications
+            # (e.g. installed manually before the playbook ran) instead of
+            # erroring; no-op when absent or already brew-managed
+            install_options: adopt
+            sudo_password: "{{ ansible_become_pass }}"
+      rescue:
+        - name: Install casks individually (batch failed)
+          community.general.homebrew_cask:
+            name: "{{ item }}"
+            state: present
+            install_options: adopt
+            sudo_password: "{{ ansible_become_pass }}"
+          loop: "{{ homebrew_casks_allowed }}"
+          register: cask_results
+          ignore_errors: true
+
+        - name: Report broken casks
+          ansible.builtin.debug:
+            msg: >-
+              Casks that failed to install:
+              {{ cask_results.results | selectattr('failed', 'defined')
+                 | selectattr('failed') | map(attribute='item') | list }}
+
+    # Requires being signed in to the App Store (mac-setup.sh gates on that
+    # during the 1Password-for-Safari install). Drives the mas CLI directly:
+    # the community.general.mas module int()-parses `mas list` output and
+    # crashes on the empty line mas 2.x prints when no apps are installed.
+    - name: List installed App Store apps
+      ansible.builtin.command:
+        cmd: /opt/homebrew/bin/mas list
+      register: mas_list
+      changed_when: false
+
+    # become: mas 2.x invokes sudo internally to install, and in a
+    # non-interactive run that inner sudo has no terminal to prompt on —
+    # running mas as root makes it a passwordless no-op
+    - name: Install Mac App Store apps with mas
+      become: true
+      ansible.builtin.command:
+        argv:
+          - /opt/homebrew/bin/mas
+          - install
+          - "{{ item.id }}"
+      loop: "{{ mas_apps }}"
+      loop_control:
+        label: "{{ item.name }}"
+      vars:
+        installed_ids: >-
+          {{ mas_list.stdout_lines | map('trim')
+             | select('match', '^[0-9]+')
+             | map('split') | map('first') | list }}
+      when: (item.id | string) not in installed_ids
+
+    # Touch ID for sudo, update-proof (sudo_local survives macOS updates);
+    # pam_reattach makes it work inside tmux/screen, ignore_ssh keeps SSH
+    # sessions on the password path
+    - name: Enable Touch ID for sudo
+      become: true
+      ansible.builtin.copy:
+        dest: /etc/pam.d/sudo_local
+        content: |
+          auth       optional       /opt/homebrew/lib/pam/pam_reattach.so ignore_ssh
+          auth       sufficient     pam_tid.so
+        owner: root
+        group: wheel
+        mode: "0644"
+
+    # Ctrl+arrow Mission Control/Spaces shortcuts swallow the keys before the
+    # terminal sees them, breaking tmux's default pane-resize bindings
+    # (32=Mission Control, 33=App windows, 79=prev Space, 81=next Space)
+    - name: Disable Ctrl-arrow Mission Control shortcuts
+      ansible.builtin.command:
+        argv:
+          - defaults
+          - write
+          - com.apple.symbolichotkeys
+          - AppleSymbolicHotKeys
+          - -dict-add
+          - "{{ item }}"
+          - "<dict><key>enabled</key><false/></dict>"
+      loop: [32, 33, 79, 81]
+      changed_when: false
+
+    # Free up cmd-space for Alfred (64=Spotlight search, 65=Finder search window)
+    - name: Disable Spotlight keyboard shortcuts
+      ansible.builtin.command:
+        argv:
+          - defaults
+          - write
+          - com.apple.symbolichotkeys
+          - AppleSymbolicHotKeys
+          - -dict-add
+          - "{{ item }}"
+          - "<dict><key>enabled</key><false/></dict>"
+      loop: [64, 65]
+      changed_when: false
+
+    # F1-F12 act as standard function keys; hold fn for brightness/volume/etc.
+    # activateSettings -u below applies it without a logout.
+    - name: Use F-keys as standard function keys
+      community.general.osx_defaults:
+        domain: NSGlobalDomain
+        key: com.apple.keyboard.fnState
+        type: bool
+        value: true
+
+    - name: Activate hotkey changes
+      ansible.builtin.command:
+        cmd: /System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u
+      changed_when: false
+
+    # Traditional scroll direction: swipe down scrolls the content down.
+    # Running apps only pick this up after logout/login.
+    - name: Disable natural scrolling
+      community.general.osx_defaults:
+        domain: NSGlobalDomain
+        key: com.apple.swipescrolldirection
+        type: bool
+        value: false
+
+    - name: Remove all pinned apps from the dock
+      community.general.osx_defaults:
+        domain: com.apple.dock
+        key: persistent-apps
+        type: array
+        value: []
+      notify: Restart Dock
+
+    - name: Enable dock autohide
+      community.general.osx_defaults:
+        domain: com.apple.dock
+        key: autohide
+        type: bool
+        value: true
+      notify: Restart Dock
+
+    - name: Disable suggested and recent apps in the dock
+      community.general.osx_defaults:
+        domain: com.apple.dock
+        key: show-recents
+        type: bool
+        value: false
+      notify: Restart Dock
+
+    # Nlsv = list view (icnv=icon, clmv=column, glyv=gallery)
+    - name: Set finder default view to list view
+      community.general.osx_defaults:
+        domain: com.apple.finder
+        key: FXPreferredViewStyle
+        type: string
+        value: Nlsv
+      notify: Restart Finder
+
+    # PfHm = home directory; both keys are needed
+    - name: Open new finder windows in the home directory
+      community.general.osx_defaults:
+        domain: com.apple.finder
+        key: "{{ item.key }}"
+        type: string
+        value: "{{ item.value }}"
+      loop:
+        - { key: NewWindowTarget, value: PfHm }
+        - { key: NewWindowTargetPath, value: "file://{{ ansible_facts.env.HOME }}/" }
+      notify: Restart Finder
+
+    - name: Hide recent tags in the finder sidebar
+      community.general.osx_defaults:
+        domain: com.apple.finder
+        key: ShowRecentTags
+        type: bool
+        value: false
+      notify: Restart Finder
+
+  handlers:
+    - name: Restart Dock
+      ansible.builtin.command:
+        cmd: killall Dock
+
+    - name: Restart Finder
+      ansible.builtin.command:
+        cmd: killall Finder
