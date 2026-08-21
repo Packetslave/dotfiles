@@ -509,6 +509,15 @@
       loop: [64, 65]
       changed_when: false
 
+    # F1-F12 act as standard function keys; hold fn for brightness/volume/etc.
+    # activateSettings -u below applies it without a logout.
+    - name: Use F-keys as standard function keys
+      community.general.osx_defaults:
+        domain: NSGlobalDomain
+        key: com.apple.keyboard.fnState
+        type: bool
+        value: true
+
     - name: Activate hotkey changes
       ansible.builtin.command:
         cmd: /System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u
