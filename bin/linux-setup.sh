@@ -62,6 +62,60 @@ else
     brew install ansible
 fi
 
+# ---------------------------------------------------------------------------
+# 3. Cowork external checkouts (src/_external/)
+# ---------------------------------------------------------------------------
+# Mirrors mac-setup.sh §15. Third-party code under src/_external/ isn't part of
+# the cowork clone (src/ is gitignored — each entry is its own repo), so every
+# machine clones it itself. Four machines have been bitten by the missing
+# checkouts: johnny5, impulse, lunchbox (2026-08-20), seaside (2026-08-21) —
+# the last because §15 was macOS-only and Linux had no equivalent.
+#
+# On Linux the set is smaller than the Mac's: omnifocus-cli is deliberately
+# skipped (OmniFocus is a Mac app driven over JXA).
+step "Cowork external checkouts"
+COWORK_DIR="${COWORK_DIR:-$HOME/src/cowork}"
+if [[ -d "$COWORK_DIR/.git" ]]; then
+    EXTERNAL_DIR="$COWORK_DIR/src/_external"
+    mkdir -p "$EXTERNAL_DIR"
+
+    # claude-obsidian — required by Skills/wiki-ops/scripts/wiki-tx.py, which
+    # imports claude_obsidian.ledgers. Without it /claude-obsidian:save and
+    # wiki-ingest die with an ImportError.
+    if [[ -d "$EXTERNAL_DIR/claude-obsidian" ]]; then
+        info "claude-obsidian checkout already present."
+    else
+        git clone https://github.com/Packetslave/claude-obsidian "$EXTERNAL_DIR/claude-obsidian"
+    fi
+
+    # instapaper-mcp — upstream, not a fork. Needs node/npm to build; a missing
+    # build surfaces as /mcp reconnect error -32000.
+    if [[ ! -d "$EXTERNAL_DIR/instapaper-mcp" ]]; then
+        git clone https://github.com/hendronf/Instapaper-MCP "$EXTERNAL_DIR/instapaper-mcp"
+    fi
+    if [[ -f "$EXTERNAL_DIR/instapaper-mcp/build/index.js" ]]; then
+        info "instapaper-mcp already built."
+    elif command -v npm >/dev/null 2>&1; then
+        (cd "$EXTERNAL_DIR/instapaper-mcp" && npm install && npm run build)
+    else
+        info "npm not found — skipping instapaper-mcp build (re-run after ansible installs node)."
+    fi
+
+    # omnifocus-cli is macOS-only (OmniFocus.app + JXA); nothing to do here.
+    info "omnifocus-cli skipped (macOS only)."
+
+    # Own nested repos under src/ (independent git repos, gitignored by cowork)
+    for repo in experiments matrix; do
+        if [[ -d "$COWORK_DIR/src/$repo" ]]; then
+            info "src/$repo already cloned."
+        else
+            git clone "git@github.com:Packetslave/${repo}.git" "$COWORK_DIR/src/$repo"
+        fi
+    done
+else
+    info "cowork clone missing — skipping src/_external checkouts."
+fi
+
 step "Done"
 info "Next: clone the dotfiles repo to ~/dotfiles and run"
 info "  ansible-playbook ansible/bootstrap.yaml"
