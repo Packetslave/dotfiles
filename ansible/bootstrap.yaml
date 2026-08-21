@@ -20,6 +20,7 @@
       - caddy
       - fzf
       - starship
+      - uv
       - zoxide
     homebrew_prefix: >-
       {{ '/opt/homebrew' if ansible_facts['system'] == 'Darwin'
