@@ -33,6 +33,7 @@
       - cloc
       - cmark-gfm
       - colima
+      - container
       - coreutils
       - csvkit
       - deno # JS runtime for yt-dlp's EJS challenge solver
