@@ -19,6 +19,7 @@
       - beads
       - caddy
       - fzf
+      - golangci-lint
       - starship
       - uv
       - zoxide
