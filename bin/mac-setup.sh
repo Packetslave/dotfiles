@@ -262,12 +262,14 @@ fi
 # 10. Origin SSH access + cowork clone (over the tailnet)
 # ---------------------------------------------------------------------------
 # seaside's authorized_keys is ansible-managed from https://github.com/<user>.keys
-# (ansible/seaside.yaml), and it accepts publickey auth only — so ssh-copy-id
-# cannot bootstrap access from here. Step 9 already pushed this machine's key
-# to GitHub; installing it is a run of the seaside playbook from an
-# ALREADY-provisioned machine, the same chicken-and-egg as the sops enrollment
-# in step 13. Warn and carry on rather than dying: every later step except the
-# external checkouts works without the clone, and this script is re-runnable.
+# — by the homelab repo (Packetslave/ansible), not this one: dotfiles converges
+# localhost, homelab configures remote hosts. seaside accepts publickey auth
+# only, so ssh-copy-id cannot bootstrap access from here. Step 9 already pushed
+# this machine's key to GitHub; installing it is a run of homelab's webserver
+# playbook from an ALREADY-provisioned machine, the same chicken-and-egg as the
+# sops enrollment in step 13. Warn and carry on rather than dying: every later
+# step except the external checkouts works without the clone, and this script
+# is re-runnable.
 step "SSH access to $ORIGIN_HOST"
 cowork_reachable=true
 if ssh -o BatchMode=yes -o ConnectTimeout=5 -o StrictHostKeyChecking=accept-new \
@@ -276,9 +278,10 @@ if ssh -o BatchMode=yes -o ConnectTimeout=5 -o StrictHostKeyChecking=accept-new 
 else
     cowork_reachable=false
     info "No key-based SSH to $ORIGIN_HOST yet, and it takes publickey only."
-    info "From a machine that already has access, run:"
-    info "    cd $DOTFILES_DIR && ansible-playbook -i ansible/inventory.yaml \\"
-    info "        ansible/seaside.yaml"
+    info "From a machine that already has access, run (in the homelab repo,"
+    info "github.com/${GITHUB_USER}/ansible — typically ~/src/cowork/src/homelab):"
+    info "    cd <homelab>/ansible && ansible-playbook -i hosts.ini \\"
+    info "        webserver.yaml --limit ${ORIGIN_HOST}"
     info "That installs every key on https://github.com/${GITHUB_USER}.keys,"
     info "which now includes this machine's. Then re-run this script."
 fi
