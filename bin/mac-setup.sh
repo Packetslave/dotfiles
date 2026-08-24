@@ -25,8 +25,9 @@ DOTFILES_REPO="${DOTFILES_REPO:-${GITHUB_USER}/dotfiles}"   # owner/name on GitH
 DOTFILES_DIR="${DOTFILES_DIR:-$HOME/dotfiles}"
 PLAYBOOK="${PLAYBOOK:-ansible/bootstrap.yaml}"               # path relative to DOTFILES_DIR
 SSH_KEY="${SSH_KEY:-$HOME/.ssh/id_ed25519}"
-STUDIO_HOST="${STUDIO_HOST:-studio}"                         # tailnet host with the cowork repo
-COWORK_REPO="${COWORK_REPO:-${STUDIO_HOST}:git/cowork.git}"
+ORIGIN_HOST="${ORIGIN_HOST:-seaside}"                        # tailnet host with the cowork repo
+ORIGIN_USER="${ORIGIN_USER:-blanders}"                       # login on that host
+COWORK_REPO="${COWORK_REPO:-${ORIGIN_USER}@${ORIGIN_HOST}:git/cowork.git}"
 COWORK_DIR="${COWORK_DIR:-$HOME/src/cowork}"
 SSH_KEY_EMAIL="${SSH_KEY_EMAIL:-brian.landers@gmail.com}"
 SSH_KEY_TITLE="${SSH_KEY_TITLE:-$(hostname -s) ($(date +%Y-%m-%d))}"
@@ -258,29 +259,35 @@ if ! grep -qs "github.com" "$HOME/.ssh/known_hosts"; then
 fi
 
 # ---------------------------------------------------------------------------
-# 10. Studio SSH access + cowork clone (over the tailnet)
+# 10. Origin SSH access + cowork clone (over the tailnet)
 # ---------------------------------------------------------------------------
-step "SSH access to studio"
+# seaside's authorized_keys is ansible-managed from https://github.com/<user>.keys
+# (ansible/seaside.yaml), and it accepts publickey auth only — so ssh-copy-id
+# cannot bootstrap access from here. Step 9 already pushed this machine's key
+# to GitHub; installing it is a run of the seaside playbook from an
+# ALREADY-provisioned machine, the same chicken-and-egg as the sops enrollment
+# in step 13. Warn and carry on rather than dying: every later step except the
+# external checkouts works without the clone, and this script is re-runnable.
+step "SSH access to $ORIGIN_HOST"
+cowork_reachable=true
 if ssh -o BatchMode=yes -o ConnectTimeout=5 -o StrictHostKeyChecking=accept-new \
-        "$STUDIO_HOST" true 2>/dev/null; then
-    info "Key-based SSH to $STUDIO_HOST already works."
+        "${ORIGIN_USER}@${ORIGIN_HOST}" true 2>/dev/null; then
+    info "Key-based SSH to $ORIGIN_HOST already works."
 else
-    info "Copying the SSH key to $STUDIO_HOST — you'll be asked for your"
-    info "password on $STUDIO_HOST."
-    ssh-copy-id -i "${SSH_KEY}.pub" "$STUDIO_HOST"
-    ssh -o BatchMode=yes -o ConnectTimeout=5 "$STUDIO_HOST" true \
-        || die "Key-based SSH to $STUDIO_HOST still fails after ssh-copy-id."
-    info "Key installed and verified."
-    # ssh-copy-id appends directly to ~/.ssh/authorized_keys on studio; if an
-    # ansible run manages that file, it may prune the key again — add it to
-    # studio's ansible config as well to make it permanent.
-    info "NOTE: if $STUDIO_HOST's authorized_keys is ansible-managed, also add"
-    info "this key to that ansible config so the next run doesn't remove it."
+    cowork_reachable=false
+    info "No key-based SSH to $ORIGIN_HOST yet, and it takes publickey only."
+    info "From a machine that already has access, run:"
+    info "    cd $DOTFILES_DIR && ansible-playbook -i ansible/inventory.yaml \\"
+    info "        ansible/seaside.yaml"
+    info "That installs every key on https://github.com/${GITHUB_USER}.keys,"
+    info "which now includes this machine's. Then re-run this script."
 fi
 
 step "Cowork repo ($COWORK_REPO -> $COWORK_DIR)"
 if [[ -d "$COWORK_DIR/.git" ]]; then
     info "Already cloned."
+elif [[ "$cowork_reachable" != true ]]; then
+    info "Skipping — no SSH access to $ORIGIN_HOST yet (see above)."
 else
     # Prompted because the repo is large — skip it on a slow connection and
     # clone later instead.
