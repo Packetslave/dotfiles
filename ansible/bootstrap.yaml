@@ -20,6 +20,7 @@
       - caddy
       - fzf
       - golangci-lint
+      - opentofu
       - starship
       - uv
       - zoxide
