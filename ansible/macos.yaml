@@ -65,6 +65,7 @@
       - kubetail
       - lazydocker
       - librsvg
+      - lima # chassis deploy rehearsal VMs (make rehearse-up)
       - llama.cpp
       - mactop
       - marp-cli
