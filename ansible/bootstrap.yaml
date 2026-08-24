@@ -22,6 +22,7 @@
       - golangci-lint
       - opentofu
       - starship
+      - trufflehog
       - uv
       - zoxide
     homebrew_prefix: >-
