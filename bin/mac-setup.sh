@@ -441,6 +441,18 @@ if [[ -d "$COWORK_DIR/.git" ]]; then
     else
         (cd "$EXTERNAL_DIR/instapaper-mcp" && npm install && npm run build)
     fi
+    # ContainerTools: chassis's dev loop uses its container-compose to run
+    # docker-compose.yml on Apple `container` (make dev-up in src/chassis).
+    # Missing this checkout surfaces as MODULE_NOT_FOUND on CONTAINER_COMPOSE
+    # (bit lunchbox, 2026-08-24 — cowork-dbn).
+    if [[ ! -d "$EXTERNAL_DIR/ContainerTools" ]]; then
+        git clone https://github.com/MacOSTools/ContainerTools "$EXTERNAL_DIR/ContainerTools"
+    fi
+    if [[ -f "$EXTERNAL_DIR/ContainerTools/container-compose/dist/cli.js" ]]; then
+        info "ContainerTools container-compose already built."
+    else
+        (cd "$EXTERNAL_DIR/ContainerTools/container-compose" && npm install && npm run build)
+    fi
     if [[ ! -d "$EXTERNAL_DIR/omnifocus-cli" ]]; then
         git clone git@github.com:Packetslave/omnifocus-cli.git "$EXTERNAL_DIR/omnifocus-cli"
     fi
