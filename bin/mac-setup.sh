@@ -447,6 +447,37 @@ if [[ -d "$COWORK_DIR/.git" ]]; then
     mkdir -p "$HOME/.bun/bin"
     ln -sf "$EXTERNAL_DIR/omnifocus-cli/dist/cli.js" "$HOME/.bun/bin/of"
 
+    # private-journal-mcp: Claude's own private notebook, with local semantic
+    # search (Xenova/all-MiniLM-L6-v2, ~90MB fetched into ~/.cache/huggingface
+    # on first use). npm >=11 blocks sharp's install script — that is expected
+    # and harmless; text feature-extraction does not need sharp.
+    if [[ ! -d "$EXTERNAL_DIR/private-journal-mcp" ]]; then
+        git clone https://github.com/obra/private-journal-mcp.git "$EXTERNAL_DIR/private-journal-mcp"
+    fi
+    if [[ -f "$EXTERNAL_DIR/private-journal-mcp/dist/index.js" ]]; then
+        info "private-journal-mcp already built."
+    else
+        (cd "$EXTERNAL_DIR/private-journal-mcp" && npm install && npm run build)
+    fi
+    # Registered user-scoped in ~/.claude.json (not cowork's .mcp.json) so every
+    # project on this machine shares one journal, with PRIVATE_JOURNAL_PATH
+    # pinned inside the cowork repo — entries are committed and therefore sync
+    # across machines via seaside. Without this step the checkout above is inert.
+    CLAUDE_JSON="$HOME/.claude.json"
+    [[ -f "$CLAUDE_JSON" ]] || echo '{}' > "$CLAUDE_JSON"
+    jq --arg node "$(command -v node)" \
+       --arg entry "$EXTERNAL_DIR/private-journal-mcp/dist/index.js" \
+       --arg jpath "$COWORK_DIR/.private-journal" \
+       '.mcpServers["private-journal"] = {
+            type: "stdio",
+            command: $node,
+            args: [$entry],
+            env: {
+                PRIVATE_JOURNAL_PATH: $jpath,
+                PATH: "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
+            }
+        }' "$CLAUDE_JSON" > "$CLAUDE_JSON.tmp" && mv -f "$CLAUDE_JSON.tmp" "$CLAUDE_JSON"
+
     # Own nested repos under src/ (independent git repos, gitignored by cowork)
     for repo in experiments matrix; do
         if [[ -d "$COWORK_DIR/src/$repo" ]]; then
