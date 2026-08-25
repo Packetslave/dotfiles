@@ -4,14 +4,39 @@
 #
 # Safe to re-run at any point: every step checks current state before acting.
 #
-# Deliberately minimal for now: install Homebrew, then use it to install
-# ansible. The ansible playbook (ansible/bootstrap.yaml) does the rest —
-# grow this script only with steps ansible can't do for itself.
+# Ansible does as much as it can (ansible/bootstrap.yaml -> linux.yaml); this
+# script covers what ansible cannot do for itself — installing brew and ansible,
+# creating credentials, cloning repos, and the post-install steps that need the
+# binaries ansible just put on disk.
+#
+# NOT handled here, by design:
+#   * Tailscale, the zsh package, the login shell, sudoers and authorized_keys.
+#     Those are system-level and belong to the homelab repo, which applies them
+#     over SSH:  ansible-playbook -i hosts.ini workstations.yaml --limit <host>
+#   * Docker, likewise homelab — it rewrites the host's iptables FORWARD policy,
+#     so it is scoped to an explicit inventory group that no k3s node is in.
 #
 # Usage:
 #   ./linux-setup.sh
+#
+# Override any default below via the environment, e.g.:
+#   COWORK_DIR=/srv/cowork ./linux-setup.sh
 
 set -euo pipefail
+
+# ---------------------------------------------------------------------------
+# Configuration (mirrors mac-setup.sh)
+# ---------------------------------------------------------------------------
+GITHUB_USER="${GITHUB_USER:-Packetslave}"
+DOTFILES_DIR="${DOTFILES_DIR:-$HOME/dotfiles}"
+PLAYBOOK="${PLAYBOOK:-ansible/bootstrap.yaml}"               # relative to DOTFILES_DIR
+SSH_KEY="${SSH_KEY:-$HOME/.ssh/id_ed25519}"
+ORIGIN_HOST="${ORIGIN_HOST:-seaside}"                        # tailnet host with the cowork repo
+ORIGIN_USER="${ORIGIN_USER:-blanders}"                       # login on that host
+COWORK_REPO="${COWORK_REPO:-${ORIGIN_USER}@${ORIGIN_HOST}:git/cowork.git}"
+COWORK_DIR="${COWORK_DIR:-$HOME/src/cowork}"
+SSH_KEY_EMAIL="${SSH_KEY_EMAIL:-brian.landers@gmail.com}"
+SSH_KEY_TITLE="${SSH_KEY_TITLE:-$(hostname -s) ($(date +%Y-%m-%d))}"
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -53,28 +78,224 @@ for profile in "$HOME/.profile" "$HOME/.zprofile"; do
 done
 
 # ---------------------------------------------------------------------------
-# 2. Ansible
+# 2. Ansible + GitHub CLI
 # ---------------------------------------------------------------------------
-step "Installing ansible"
-if brew list --formula ansible >/dev/null 2>&1; then
-    info "ansible already installed."
+# gh is needed in step 4, before the playbook runs; ansible is needed in step 6.
+# Both are in the playbook's package lists too, so this is just the bootstrap.
+step "Installing ansible and gh"
+for pkg in ansible gh; do
+    if brew list --formula "$pkg" >/dev/null 2>&1; then
+        info "$pkg already installed."
+    else
+        brew install "$pkg"
+    fi
+done
+
+# ---------------------------------------------------------------------------
+# 3. SSH key
+# ---------------------------------------------------------------------------
+step "SSH key"
+mkdir -p "$HOME/.ssh"
+chmod 700 "$HOME/.ssh"
+if [[ -f "$SSH_KEY" ]]; then
+    info "Key already exists at $SSH_KEY"
 else
-    brew install ansible
+    info "Generating new ed25519 key at $SSH_KEY"
+    ssh-keygen -t ed25519 -C "$SSH_KEY_EMAIL" -f "$SSH_KEY"
+fi
+
+# No UseKeychain on Linux (that is a macOS ssh extension); AddKeysToAgent is
+# enough, and the agent may not be running at all in a headless session.
+ssh_config="$HOME/.ssh/config"
+if ! grep -qsF "IdentityFile $SSH_KEY" "$ssh_config"; then
+    cat >> "$ssh_config" <<EOF
+
+Host *
+  AddKeysToAgent yes
+  IdentityFile $SSH_KEY
+EOF
+    chmod 600 "$ssh_config"
+    info "Added agent settings to $ssh_config"
+fi
+if [[ -n "${SSH_AUTH_SOCK:-}" ]]; then
+    ssh-add "$SSH_KEY" 2>/dev/null || info "Could not add the key to the agent (passphrase?)."
+else
+    info "No ssh-agent in this session — skipping ssh-add."
 fi
 
 # ---------------------------------------------------------------------------
-# 3. Cowork external checkouts (src/_external/)
+# 4. GitHub: authenticate and upload the key
 # ---------------------------------------------------------------------------
-# Mirrors mac-setup.sh §15. Third-party code under src/_external/ isn't part of
-# the cowork clone (src/ is gitignored — each entry is its own repo), so every
-# machine clones it itself. Four machines have been bitten by the missing
+step "GitHub authentication"
+if gh auth status >/dev/null 2>&1; then
+    info "Already logged in to GitHub."
+else
+    info "Logging in — follow the prompts. On a headless box choose the"
+    info "device-code flow and paste the code into a browser elsewhere."
+    gh auth login --hostname github.com --git-protocol ssh --skip-ssh-key
+fi
+
+# gh's default token can't manage SSH keys; grab the scope if we lack it.
+if ! gh auth status 2>&1 | grep -q "admin:public_key"; then
+    info "Adding admin:public_key scope to the gh token..."
+    gh auth refresh --hostname github.com --scopes admin:public_key
+fi
+
+step "Uploading SSH key to GitHub"
+pub_key_material=$(awk '{print $2}' "${SSH_KEY}.pub")
+if gh ssh-key list 2>/dev/null | grep -qF "$pub_key_material"; then
+    info "Key is already on your GitHub account."
+else
+    gh ssh-key add "${SSH_KEY}.pub" --title "$SSH_KEY_TITLE"
+    info "Key added as '$SSH_KEY_TITLE'."
+fi
+
+# Pre-trust github.com so the clones below don't stop to ask.
+if ! grep -qs "github.com" "$HOME/.ssh/known_hosts"; then
+    ssh-keyscan github.com >> "$HOME/.ssh/known_hosts" 2>/dev/null
+fi
+
+# ---------------------------------------------------------------------------
+# 5. Origin SSH access + cowork clone (over the tailnet)
+# ---------------------------------------------------------------------------
+# $ORIGIN_HOST's authorized_keys is ansible-managed from
+# https://github.com/<user>.keys by the homelab repo, so installing this
+# machine's key is a playbook run from an ALREADY-provisioned machine. Step 4
+# pushed the key to GitHub; warn and carry on rather than dying, since every
+# later step except the checkouts works without the clone.
+#
+# This host also has to be ON the tailnet first — that is homelab's
+# workstations.yaml plus a manual `sudo tailscale up`.
+step "SSH access to $ORIGIN_HOST"
+cowork_reachable=true
+if ! command -v tailscale >/dev/null 2>&1; then
+    info "tailscale is not installed — $ORIGIN_HOST is only reachable on the tailnet."
+    info "Run homelab's workstations.yaml against this host, then 'sudo tailscale up'."
+fi
+if ssh -o BatchMode=yes -o ConnectTimeout=5 -o StrictHostKeyChecking=accept-new \
+        "${ORIGIN_USER}@${ORIGIN_HOST}" true 2>/dev/null; then
+    info "Key-based SSH to $ORIGIN_HOST already works."
+else
+    cowork_reachable=false
+    info "No key-based SSH to $ORIGIN_HOST yet, and it takes publickey only."
+    info "From a machine that already has access, run (in the homelab repo,"
+    info "typically ~/src/cowork/src/homelab):"
+    info "    cd <homelab>/ansible && ansible-playbook -i hosts.ini \\"
+    info "        webserver.yaml --limit ${ORIGIN_HOST}"
+    info "That installs every key on https://github.com/${GITHUB_USER}.keys,"
+    info "which now includes this machine's. Then re-run this script."
+fi
+
+step "Cowork repo ($COWORK_REPO -> $COWORK_DIR)"
+if [[ -d "$COWORK_DIR/.git" ]]; then
+    info "Already cloned."
+elif [[ "$cowork_reachable" != true ]]; then
+    info "Skipping — no SSH access to $ORIGIN_HOST yet (see above)."
+else
+    mkdir -p "$(dirname "$COWORK_DIR")"
+    git clone "$COWORK_REPO" "$COWORK_DIR"
+fi
+
+# ---------------------------------------------------------------------------
+# 6. Ansible bootstrap playbook
+# ---------------------------------------------------------------------------
+# Runs after the cowork clone on purpose: bootstrap.yaml's Caddy tasks are
+# silently skipped unless configs/Caddyfile.j2 is already on disk.
+step "Ansible bootstrap playbook: $PLAYBOOK"
+if [[ -d "$DOTFILES_DIR" ]]; then
+    cd "$DOTFILES_DIR"
+    [[ -f "$PLAYBOOK" ]] || die "Playbook '$PLAYBOOK' not found in $DOTFILES_DIR."
+    if [[ -f requirements.yml ]]; then
+        ansible-galaxy install -r requirements.yml
+    fi
+    # No OBJC_DISABLE_INITIALIZE_FORK_SAFETY needed here — that is a macOS
+    # fork-safety workaround.
+    ansible-playbook -i "localhost," -c local "$PLAYBOOK"
+else
+    info "$DOTFILES_DIR not found — skipping the playbook."
+fi
+
+# ---------------------------------------------------------------------------
+# 7. SOPS/age identity — cowork secrets access
+# ---------------------------------------------------------------------------
+# No Secure Enclave on Linux, so this is a plain age identity file protected by
+# permissions alone (see cowork's decision-secrets-management-2026-06-26.md).
+# Enrollment is finished from an ALREADY-enrolled machine; until then this host
+# cannot decrypt, and the zshrc claude wrapper will say so and carry on.
+step "SOPS/age identity"
+AGE_KEY_FILE="$HOME/.config/sops/age/keys.txt"
+for pkg in age sops; do
+    brew list --formula "$pkg" >/dev/null 2>&1 || brew install "$pkg"
+done
+if [[ -f "$AGE_KEY_FILE" ]]; then
+    info "Identity already exists at $AGE_KEY_FILE"
+else
+    mkdir -p "$(dirname "$AGE_KEY_FILE")"
+    chmod 700 "$HOME/.config/sops" "$(dirname "$AGE_KEY_FILE")"
+    age-keygen -o "$AGE_KEY_FILE"
+    chmod 600 "$AGE_KEY_FILE"
+fi
+recipient=$(grep -o 'age1[0-9a-z]*' "$AGE_KEY_FILE" | tail -1)
+info "This machine's public recipient: $recipient"
+info "To finish enrollment, from an already-enrolled machine (e.g. impulse):"
+info "  1. add the recipient above to .sops.yaml in the cowork repo"
+info "  2. sops updatekeys -y secrets/*.enc.env"
+info "  3. commit + push, then 'git pull' in $COWORK_DIR on this machine"
+
+# ---------------------------------------------------------------------------
+# 8. Claude Code plugins
+# ---------------------------------------------------------------------------
+# Mirrors mac-setup.sh, minus apple-notes (the MCP server drives Notes.app over
+# JXA). Marketplace names come from each repo's .claude-plugin manifest:
+# Packetslave/claude-obsidian -> "agricidaniel-claude-obsidian" (the fork keeps
+# upstream's name), mattpocock/skills -> "mattpocock".
+step "Claude Code plugins"
+add_claude_plugin() {
+    local repo="$1" marketplace="$2" plugin="$3"
+    if ! claude plugin marketplace list 2>/dev/null | grep -q "$marketplace"; then
+        claude plugin marketplace add "$repo"
+    fi
+    if claude plugin list 2>/dev/null | grep -q "${plugin}@${marketplace}"; then
+        info "$plugin already installed."
+    else
+        claude plugin install "${plugin}@${marketplace}"
+    fi
+}
+if command -v claude >/dev/null 2>&1; then
+    add_claude_plugin Packetslave/claude-obsidian agricidaniel-claude-obsidian claude-obsidian
+    add_claude_plugin mattpocock/skills mattpocock mattpocock-skills
+    add_claude_plugin anthropics/claude-plugins-official claude-plugins-official frontend-design
+    add_claude_plugin anthropics/claude-plugins-official claude-plugins-official playwright
+    add_claude_plugin anthropics/claude-plugins-official claude-plugins-official github
+    add_claude_plugin ChromeDevTools/chrome-devtools-mcp chrome-devtools-plugins chrome-devtools-mcp
+    info "apple-notes skipped (macOS only)."
+
+    # settings.json: seed defaults on a fresh machine (existing values win — the
+    # left side of jq's + loses to what's already in the file), then point
+    # statusLine at the dotfiles-owned script (symlinked into ~/.claude by ansible)
+    mkdir -p "$HOME/.claude"
+    CLAUDE_SETTINGS="$HOME/.claude/settings.json"
+    [ -f "$CLAUDE_SETTINGS" ] || echo '{}' > "$CLAUDE_SETTINGS"
+    jq --arg cmd "$HOME/.claude/statusline.sh" \
+        '{model: "claude-fable-5[1m]", theme: "dark", tui: "fullscreen"} + .
+         + {statusLine: {type: "command", command: $cmd}}' \
+        "$CLAUDE_SETTINGS" > "$CLAUDE_SETTINGS.tmp" && mv -f "$CLAUDE_SETTINGS.tmp" "$CLAUDE_SETTINGS"
+else
+    info "claude not found — skipping (re-run after the playbook installs it)."
+fi
+
+# ---------------------------------------------------------------------------
+# 9. Cowork external checkouts (src/_external/)
+# ---------------------------------------------------------------------------
+# Mirrors mac-setup.sh. Third-party code under src/_external/ isn't part of the
+# cowork clone (src/ is gitignored — each entry is its own repo), so every
+# machine clones it itself. Five machines have been bitten by the missing
 # checkouts: johnny5, impulse, lunchbox (2026-08-20), seaside (2026-08-21) —
 # the last because §15 was macOS-only and Linux had no equivalent.
 #
-# On Linux the set is smaller than the Mac's: omnifocus-cli is deliberately
-# skipped (OmniFocus is a Mac app driven over JXA).
+# On Linux the set is smaller: omnifocus-cli and ContainerTools are macOS-only,
+# and papercuts-mcp lives on Reddit's GHE, which a personal box cannot reach.
 step "Cowork external checkouts"
-COWORK_DIR="${COWORK_DIR:-$HOME/src/cowork}"
 if [[ -d "$COWORK_DIR/.git" ]]; then
     EXTERNAL_DIR="$COWORK_DIR/src/_external"
     mkdir -p "$EXTERNAL_DIR"
@@ -98,11 +319,53 @@ if [[ -d "$COWORK_DIR/.git" ]]; then
     elif command -v npm >/dev/null 2>&1; then
         (cd "$EXTERNAL_DIR/instapaper-mcp" && npm install && npm run build)
     else
-        info "npm not found — skipping instapaper-mcp build (re-run after ansible installs node)."
+        info "npm not found — skipping instapaper-mcp build."
+    fi
+
+    # private-journal-mcp: Claude's own private notebook, with local semantic
+    # search (Xenova/all-MiniLM-L6-v2, ~90MB fetched into ~/.cache/huggingface
+    # on first use). npm >=11 blocks sharp's install script — that is expected
+    # and harmless; text feature-extraction does not need sharp.
+    if [[ ! -d "$EXTERNAL_DIR/private-journal-mcp" ]]; then
+        git clone https://github.com/obra/private-journal-mcp.git "$EXTERNAL_DIR/private-journal-mcp"
+    fi
+    if [[ -f "$EXTERNAL_DIR/private-journal-mcp/dist/index.js" ]]; then
+        info "private-journal-mcp already built."
+    elif command -v npm >/dev/null 2>&1; then
+        (cd "$EXTERNAL_DIR/private-journal-mcp" && npm install && npm run build)
+    else
+        info "npm not found — skipping private-journal-mcp build."
+    fi
+    # Registered user-scoped in ~/.claude.json (not cowork's .mcp.json) so every
+    # project on this machine shares one journal, with PRIVATE_JOURNAL_PATH
+    # pinned inside the cowork repo — entries are committed and therefore sync
+    # across machines via seaside. Without this step the checkout above is inert.
+    if [[ -f "$EXTERNAL_DIR/private-journal-mcp/dist/index.js" ]] && command -v jq >/dev/null 2>&1; then
+        CLAUDE_JSON="$HOME/.claude.json"
+        [[ -f "$CLAUDE_JSON" ]] || echo '{}' > "$CLAUDE_JSON"
+        jq --arg node "$(command -v node)" \
+           --arg entry "$EXTERNAL_DIR/private-journal-mcp/dist/index.js" \
+           --arg jpath "$COWORK_DIR/.private-journal" \
+           --arg path "$(brew --prefix)/bin:/usr/local/bin:/usr/bin:/bin" \
+           '.mcpServers["private-journal"] = {
+                type: "stdio",
+                command: $node,
+                args: [$entry],
+                env: {
+                    PRIVATE_JOURNAL_PATH: $jpath,
+                    PATH: $path
+                }
+            }' "$CLAUDE_JSON" > "$CLAUDE_JSON.tmp" && mv -f "$CLAUDE_JSON.tmp" "$CLAUDE_JSON"
+        info "private-journal registered in $CLAUDE_JSON"
     fi
 
     # omnifocus-cli is macOS-only (OmniFocus.app + JXA); nothing to do here.
     info "omnifocus-cli skipped (macOS only)."
+    # ContainerTools drives Apple's `container`, which does not exist off macOS.
+    info "ContainerTools skipped (macOS only)."
+    # papercuts-mcp lives on github.snooguts.net (Reddit GHE) — unreachable from
+    # a personal machine, so the papercuts MCP stays dark here.
+    info "papercuts-mcp skipped (Reddit GHE)."
 
     # Own nested repos under src/ (independent git repos, gitignored by cowork)
     for repo in experiments matrix; do
@@ -117,5 +380,9 @@ else
 fi
 
 step "Done"
-info "Next: clone the dotfiles repo to ~/dotfiles and run"
-info "  ansible-playbook ansible/bootstrap.yaml"
+info "Remaining manual steps:"
+info "  * finish sops enrollment (step 7 printed the recipient)"
+info "  * run 'claude' once to authenticate interactively"
+info "  * 'bd bootstrap' to seed the beads DB — never 'bd import' the JSONL"
+info "  * install the TruffleHog pre-commit guard:"
+info "      $COWORK_DIR/Skills/secrets-management/scripts/install-secret-hooks.sh"
