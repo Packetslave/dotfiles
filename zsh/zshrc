@@ -5,9 +5,16 @@
 ## My zshrc
 ##
 
-if [ -f /opt/homebrew/bin/brew ] ; then
-  eval "$(/opt/homebrew/bin/brew shellenv)"
-fi
+# Homebrew sits at a different prefix per platform (/opt/homebrew on macOS,
+# /home/linuxbrew/.linuxbrew on Linux). shellenv exports HOMEBREW_PREFIX, so
+# everything below can stay portable instead of hardcoding /opt/homebrew.
+for _brew in /opt/homebrew/bin/brew /home/linuxbrew/.linuxbrew/bin/brew /usr/local/bin/brew ; do
+  if [ -x "$_brew" ] ; then
+    eval "$("$_brew" shellenv)"
+    break
+  fi
+done
+unset _brew
 
 #
 # Local config
@@ -175,7 +182,8 @@ export AWS_SDK_LOAD_CONFIG=true
 alias gdm=git diff $(git_main_branch)
 export PATH=/usr/class/bin:$PATH
 
-# >>> conda initialize >>>
+# >>> conda initialize >>>  (macOS only — /opt/anaconda3)
+if [[ "$OSTYPE" == darwin* ]] ; then
 # !! Contents within this block are managed by 'conda init' !!
 __conda_setup="$('/opt/anaconda3/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
 if [ $? -eq 0 ]; then
@@ -188,6 +196,7 @@ else
     fi
 fi
 unset __conda_setup
+fi
 # <<< conda initialize <<<
 
 alias dg="doggo --strategy=random --time"
@@ -260,16 +269,18 @@ export LESS='-Ric -x4 --use-color -Dd+r$Du+b'
 export MANROFFOPT='-c'
 
 export NVM_DIR="$HOME/.nvm"
-[ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && >&2 echo 🐚 nvm && \. "/opt/homebrew/opt/nvm/nvm.sh"  # This loads nvm
+[ -s "${HOMEBREW_PREFIX:-/opt/homebrew}/opt/nvm/nvm.sh" ] && >&2 echo 🐚 nvm && \. "${HOMEBREW_PREFIX:-/opt/homebrew}/opt/nvm/nvm.sh"  # This loads nvm
 
 # Added by LM Studio CLI (lms)
-export PATH="$PATH:/Users/blanders/.lmstudio/bin"
+[ -d "$HOME/.lmstudio/bin" ] && export PATH="$PATH:$HOME/.lmstudio/bin"
 # End of LM Studio CLI section
 
 # put local first so we get uv's python
 export PATH=$HOME/.local/bin:$PATH
 >&2 echo python3 is $(which python3)
 
+# duti, PlistBuddy and iTerm2 are all macOS-only, as is vmd (it calls iterm)
+if [[ "$OSTYPE" == darwin* ]] ; then
 function set_default_app() {
   if [[ $# -lt 2 || $# -gt 3 ]]; then
     >&2 echo "usage: set_default_app <bundle-id> <extension-or-uti> [role]"
@@ -317,6 +328,7 @@ iterm() {
 function vmd() {
   iterm "glow -p $1 -w 0" 160,48
 }
+fi
 
 export DRONE_SERVER=https://drone.build.ue1.snooguts.net
 export SRC_ENDPOINT=https://reddit.sourcegraphcloud.com
@@ -326,15 +338,36 @@ claude() {
   # One sops decrypt = one Touch ID prompt; MCP servers inherit the env
   # (regen the file with secrets/build-claude-startup.sh after editing secrets)
   # sops locates age-plugin-se via $PATH, so pin homebrew for non-interactive SSH
-  PATH="/opt/homebrew/bin:$PATH" /opt/homebrew/bin/sops exec-env /Users/blanders/src/cowork/secrets/claude-startup.enc.env \
-    "/opt/homebrew/bin/claude --enable-auto-mode ${(j: :)${(q)@}}"
+  local brew_bin="${HOMEBREW_PREFIX:-/opt/homebrew}/bin"
+  local secrets="$HOME/src/cowork/secrets/claude-startup.enc.env"
+  local claude_bin sops_bin
+  # whence -p, not command -v: inside this function the latter resolves to the
+  # function itself. The brew path wins; the PATH search covers a host carrying
+  # a native install instead (seaside).
+  claude_bin="$brew_bin/claude" ; [[ -x "$claude_bin" ]] || claude_bin="$(whence -p claude)"
+  sops_bin="$brew_bin/sops"     ; [[ -x "$sops_bin"   ]] || sops_bin="$(whence -p sops)"
+
+  if [[ -z "$claude_bin" ]] ; then
+    >&2 echo "claude: not installed — brew install --cask claude-code"
+    return 127
+  fi
+  # Degrade instead of failing when the machine has no sops identity yet.
+  # Without this the wrapper makes claude unlaunchable rather than merely
+  # credential-less, which is the state of every host before enrollment.
+  if [[ -z "$sops_bin" || ! -f "$secrets" ]] ; then
+    >&2 echo "claude: no sops secrets — MCP servers start without credentials"
+    "$claude_bin" --enable-auto-mode "$@"
+    return
+  fi
+  PATH="$brew_bin:$PATH" "$sops_bin" exec-env "$secrets" \
+    "$claude_bin --enable-auto-mode ${(j: :)${(q)@}}"
 }
 
 alias p8='sudo mtr -z 8.8.8.8'
 alias crg='rg --color=always'
 alias cbat='bat --color=always'
 alias codex='echo WARNING - using stdio MCP wrapper script >&2; $HOME/src/SameBrain/Scripts/codex-mcp-stdio'
-alias tailscale=/Applications/Tailscale.app/Contents/MacOS/Tailscale
+[[ "$OSTYPE" == darwin* ]] && alias tailscale=/Applications/Tailscale.app/Contents/MacOS/Tailscale
 alias taildrop='tailscale file cp'
 
 eval "$(starship init zsh)"
