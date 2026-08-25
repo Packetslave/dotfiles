@@ -16,15 +16,42 @@
     # macOS and Linux alike (mac-setup.sh / linux-setup.sh install it before
     # this playbook runs). macOS-only formulae stay in macos.yaml.
     homebrew_common_formulae:
+      - age
+      - atuin
+      - bat
       - beads
+      - btop
       - caddy
+      - cmark-gfm
+      - eza
+      - fd
       - fzf
+      - gh
+      - git
+      - git-delta
       - golangci-lint
+      - jq # claude/statusline.sh parses JSON with it
+      - librsvg # rsvg-convert, the SVG->PNG/PDF render path
+      - mosh
+      - neovim
+      - node # .mcp.json launches node; instapaper-mcp build needs npm
       - opentofu
+      - powerlevel10k
+      - ripgrep
+      - shellcheck
+      - sops
       - starship
+      - tig
+      - tmux
       - trufflehog
       - uv
+      - yq
       - zoxide
+    # Casks are not macOS-only under Homebrew 6: claude-code resolves per
+    # platform (linux-x64 / darwin-arm64) and community.general.homebrew_cask
+    # runs on Linux. macOS-only casks stay in macos.yaml.
+    homebrew_common_casks:
+      - claude-code
     homebrew_prefix: >-
       {{ '/opt/homebrew' if ansible_facts['system'] == 'Darwin'
          else '/home/linuxbrew/.linuxbrew' }}
@@ -189,6 +216,15 @@
     - name: Install cross-platform packages with homebrew
       community.general.homebrew:
         name: "{{ homebrew_common_formulae }}"
+        state: present
+
+    # Reddit-managed machines deliberately skip Claude tooling, same gate as
+    # macos.yaml's claude_casks filter. No install_options: adopt here — that
+    # takes over an app already in /Applications, which means nothing on Linux.
+    - name: Install cross-platform casks with homebrew
+      when: not reddit_machine.stat.exists
+      community.general.homebrew_cask:
+        name: "{{ homebrew_common_casks }}"
         state: present
 
     # Local web server on :2015 (see configs/README.md in the cowork repo).

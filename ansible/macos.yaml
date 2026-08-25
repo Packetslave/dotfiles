@@ -21,17 +21,12 @@
     # Cross-platform formulae live in bootstrap.yaml's
     # homebrew_common_formulae, not here.
     homebrew_formulae:
-      - age
       - age-plugin-se
       - agavra/tap/tuicr
       - ansible
-      - atuin
-      - bat
       - bat-extras
-      - btop
       - bun
       - cloc
-      - cmark-gfm
       - colima
       - container
       - coreutils
@@ -42,15 +37,10 @@
       - dockutil
       - doggo
       - duti
-      - eza
-      - fd
       - felixkratz/formulae/borders
       - felixkratz/formulae/sketchybar
       - ffmpeg
       - firebase-cli
-      - gh
-      - git
-      - git-delta
       - git-extras
       - glow
       - go
@@ -59,29 +49,23 @@
       - hugo
       - hunk
       - iperf3
-      - jq
       - k9s
       - kubernetes-cli
       - kubetail
       - lazydocker
-      - librsvg
       - lima # chassis deploy rehearsal VMs (make rehearse-up)
       - llama.cpp
       - mactop
       - marp-cli
       - mas # needed by the App Store install task below
-      - mosh
       - mtr
-      - neovim
       - nmap
-      - node # .mcp.json launches /opt/homebrew/bin/node; instapaper-mcp build needs npm
       - nvm
       - opencode
       - openjdk
       - pam-reattach
       - poppler
       - posting
-      - powerlevel10k
       - protoc-gen-go
       - protoc-gen-go-grpc
       - pv
@@ -89,20 +73,13 @@
       - rclone
       - rename
       - restic
-      - ripgrep
       - rsync
       - rustup
       - sesh
-      - shellcheck
-      - sops
       - stern
       - superfile
       - tfenv
-      - tig
-      - tmux
       - tmuxinator
-      - uv
-      - yq
       - yt-dlp
     mas_apps:
       - { id: 1586435171, name: Actions }
@@ -116,7 +93,6 @@
       - agentsview
       - alfred
       - claude # Claude Desktop
-      - claude-code
       - cursor
       - darrylmorley/whatcable/whatcable
       - dropbox
@@ -141,10 +117,10 @@
       - wispr-flow
     # Claude tooling is not allowed on Reddit-managed machines
     # (detected via /opt/reddit) — filtered out of the cask list below;
-    # bootstrap.yaml also skips the ~/.claude link tasks
+    # bootstrap.yaml also skips the ~/.claude link tasks and gates
+    # homebrew_common_casks (claude-code) on the same stat
     claude_casks:
       - claude
-      - claude-code
     homebrew_casks_allowed: >-
       {{ homebrew_casks | difference(claude_casks)
          if reddit_machine.stat.exists else homebrew_casks }}
