@@ -1,4 +1,7 @@
-{% set email = "brian.landers@reddit.com" if (ansible_user_id == "brian.landers") else "brian@packetslave.com" %}
+{# Work-machine detection is the reddit_machine stat registered in
+   bootstrap.yaml, not the login name: the two can disagree, and the stat
+   is what every other task in the playbook gates on. #}
+{% set email = "brian.landers@reddit.com" if reddit_machine.stat.exists else "brian@packetslave.com" %}
 [user]
 	name = Brian Landers
     email = {{ email }}
@@ -12,7 +15,16 @@
 [pull]
 
 [credential]
+{% if ansible_facts['system'] == 'Darwin' %}
 	helper = /usr/local/share/gcm-core/git-credential-manager
+{% else %}
+{# GCM installs at that path on macOS/Windows only; on Linux it is simply
+   absent, and git then fails every HTTPS push with "could not read Username".
+   gh is in homebrew_common_formulae and is already authenticated on these
+   boxes. It serves github.com alone, which is deliberate — snooguts and
+   dev.azure.com are Reddit hosts and these are personal machines. #}
+	helper = !gh auth git-credential
+{% endif %}
 
 [credential "https://dev.azure.com"]
 	useHttpPath = true

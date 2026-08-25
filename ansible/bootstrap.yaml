@@ -231,7 +231,9 @@
         dest: ~/.p10k.zsh
         state: link
 
-    - name: Create links - gitconfig
+    # Rendered, not linked, despite the neighbours: the template branches on
+    # reddit_machine and on the platform.
+    - name: Render gitconfig
       ansible.builtin.template:
         src: ~/dotfiles/gitconfig/gitconfig
         dest: ~/.gitconfig
