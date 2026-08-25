@@ -314,12 +314,18 @@ if [[ -d "$COWORK_DIR/.git" ]]; then
     if [[ ! -d "$EXTERNAL_DIR/instapaper-mcp" ]]; then
         git clone https://github.com/hendronf/Instapaper-MCP "$EXTERNAL_DIR/instapaper-mcp"
     fi
-    if [[ -f "$EXTERNAL_DIR/instapaper-mcp/build/index.js" ]]; then
-        info "instapaper-mcp already built."
+    # Guard on node_modules, not on the compiled entrypoint: instapaper-mcp
+    # commits build/ upstream, so build/index.js exists the moment you clone and
+    # the old check skipped the install every time on a fresh machine. node_modules
+    # is gitignored, so it actually reports whether this checkout was installed.
+    # A missing install surfaces as MCP error -32000, by way of
+    # ERR_MODULE_NOT_FOUND on @modelcontextprotocol/sdk (bit mfa1, 2026-08-25).
+    if [[ -d "$EXTERNAL_DIR/instapaper-mcp/node_modules" ]]; then
+        info "instapaper-mcp already installed."
     elif command -v npm >/dev/null 2>&1; then
         (cd "$EXTERNAL_DIR/instapaper-mcp" && npm install && npm run build)
     else
-        info "npm not found — skipping instapaper-mcp build."
+        info "npm not found — skipping instapaper-mcp install."
     fi
 
     # private-journal-mcp: Claude's own private notebook, with local semantic
@@ -329,12 +335,14 @@ if [[ -d "$COWORK_DIR/.git" ]]; then
     if [[ ! -d "$EXTERNAL_DIR/private-journal-mcp" ]]; then
         git clone https://github.com/obra/private-journal-mcp.git "$EXTERNAL_DIR/private-journal-mcp"
     fi
-    if [[ -f "$EXTERNAL_DIR/private-journal-mcp/dist/index.js" ]]; then
-        info "private-journal-mcp already built."
+    # dist/ is gitignored here, unlike instapaper-mcp's build/ — but guard on
+    # node_modules anyway, for the same reason and so the two read alike.
+    if [[ -d "$EXTERNAL_DIR/private-journal-mcp/node_modules" ]]; then
+        info "private-journal-mcp already installed."
     elif command -v npm >/dev/null 2>&1; then
         (cd "$EXTERNAL_DIR/private-journal-mcp" && npm install && npm run build)
     else
-        info "npm not found — skipping private-journal-mcp build."
+        info "npm not found — skipping private-journal-mcp install."
     fi
     # Registered user-scoped in ~/.claude.json (not cowork's .mcp.json) so every
     # project on this machine shares one journal, with PRIVATE_JOURNAL_PATH

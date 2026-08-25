@@ -430,8 +430,14 @@ if [[ -d "$COWORK_DIR/.git" ]]; then
     if [[ ! -d "$EXTERNAL_DIR/instapaper-mcp" ]]; then
         git clone https://github.com/hendronf/Instapaper-MCP "$EXTERNAL_DIR/instapaper-mcp"
     fi
-    if [[ -f "$EXTERNAL_DIR/instapaper-mcp/build/index.js" ]]; then
-        info "instapaper-mcp already built."
+    # Guard on node_modules, not on the compiled entrypoint: instapaper-mcp
+    # commits build/ upstream, so build/index.js exists the moment you clone and
+    # the old check skipped the install every time on a fresh machine. node_modules
+    # is gitignored, so it actually reports whether this checkout was installed.
+    # A missing install surfaces as MCP error -32000, by way of
+    # ERR_MODULE_NOT_FOUND on @modelcontextprotocol/sdk (bit mfa1, 2026-08-25).
+    if [[ -d "$EXTERNAL_DIR/instapaper-mcp/node_modules" ]]; then
+        info "instapaper-mcp already installed."
     else
         (cd "$EXTERNAL_DIR/instapaper-mcp" && npm install && npm run build)
     fi
