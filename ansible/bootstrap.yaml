@@ -12,6 +12,9 @@
   connection: local
 
   vars:
+    # Whose published SSH keys authorize this machine (see the ssh_keys task).
+    github_user: Packetslave
+
     # Formulae needed on every platform — Homebrew is the package manager on
     # macOS and Linux alike (mac-setup.sh / linux-setup.sh install it before
     # this playbook runs). macOS-only formulae stay in macos.yaml.
@@ -57,10 +60,44 @@
          else '/home/linuxbrew/.linuxbrew' }}
 
   tasks:
+    # `always`, because four later tasks gate on this fact and a tag-limited
+    # run (--tags ssh_keys) would otherwise skip the stat and then fail on
+    # "'reddit_machine' is undefined".
     - name: Check for a Reddit-managed machine
       ansible.builtin.stat:
         path: /opt/reddit
       register: reddit_machine
+      tags: [always]
+
+    # authorized_keys is localhost convergence, so it belongs here and not in
+    # homelab. Push cannot solve this: the host you cannot SSH into is exactly
+    # the host you cannot hand a key to. On 2026-08-25 mfa1's key was already
+    # published, and lunchbox still refused it — the only way to authorize
+    # mfa1 on lunchbox was to SSH to lunchbox. Pulling here lets a machine
+    # bootstrap its own trust, with no inventory and no reachability.
+    #
+    # github.com/<user>.keys is the source of truth, the same endpoint
+    # homelab's workstations.yaml and webserver.yaml use for the hosts that
+    # never run these dotfiles. Publish a new machine's key once
+    # (`gh ssh-key add ~/.ssh/id_ed25519.pub --title "<host> (<date>)"`) and
+    # every machine picks it up on its next converge:
+    #
+    #   ansible-playbook ~/dotfiles/ansible/bootstrap.yaml --tags ssh_keys
+    #
+    # Additive, matching its homelab siblings: hosts carry Termius, Working
+    # Copy and deploy keys that were never on GitHub, and exclusive mode would
+    # delete them. The cost is that removing a key from GitHub removes it from
+    # nowhere — revocation is still a manual, per-host job.
+    #
+    # Never on a Reddit-managed machine: the personal fleet's keys have no
+    # business authorizing anything on an employer-managed device.
+    - name: Install the admin SSH keys from GitHub
+      ansible.posix.authorized_key:
+        user: "{{ ansible_facts['user_id'] }}"
+        key: "https://github.com/{{ github_user }}.keys"
+        state: present
+      when: not reddit_machine.stat.exists
+      tags: [ssh_keys]
     - name: Create links - tmux dir
       ansible.builtin.file:
         path: ~/.tmux
