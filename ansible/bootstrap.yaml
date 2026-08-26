@@ -265,10 +265,40 @@
         force: true
       when: not reddit_machine.stat.exists
 
+    # path, because the module searches /usr/local/bin *first* by default and
+    # studio carries two prefixes: an Intel Homebrew under Rosetta beside the
+    # native arm64 one. Left to the default, every run on that machine built a
+    # second, near-complete formula set (232 vs 231) in the wrong prefix, and
+    # finally broke outright when its months-stale Homebrew met a current
+    # formula -- "unknown install step: gdk_pixbuf_query_loaders". Formulae come
+    # from the API even when the local tap is old, so the two drift apart
+    # silently. homebrew_prefix is the same value the Caddy tasks below use.
+    #
+    # The rescue mirrors macos.yaml: one formula broken upstream should degrade
+    # to a per-formula retry and a report, not take down the whole converge.
     - name: Install cross-platform packages with homebrew
-      community.general.homebrew:
-        name: "{{ homebrew_common_formulae }}"
-        state: present
+      block:
+        - name: Install cross-platform packages with homebrew (batch)
+          community.general.homebrew:
+            name: "{{ homebrew_common_formulae }}"
+            state: present
+            path: "{{ homebrew_prefix }}/bin"
+      rescue:
+        - name: Install cross-platform packages individually (batch failed)
+          community.general.homebrew:
+            name: "{{ item }}"
+            state: present
+            path: "{{ homebrew_prefix }}/bin"
+          loop: "{{ homebrew_common_formulae }}"
+          register: common_formula_results
+          ignore_errors: true
+
+        - name: Report broken cross-platform formulae
+          ansible.builtin.debug:
+            msg: >-
+              Formulae that failed to install:
+              {{ common_formula_results.results | selectattr('failed', 'defined')
+                 | selectattr('failed') | map(attribute='item') | list }}
 
     # Reddit-managed machines deliberately skip Claude tooling, same gate as
     # macos.yaml's claude_casks filter. No install_options: adopt here — that
@@ -278,6 +308,7 @@
       community.general.homebrew_cask:
         name: "{{ homebrew_common_casks }}"
         state: present
+        path: "{{ homebrew_prefix }}/bin"
 
     # Local web server on :2015 (see configs/README.md in the cowork repo).
     # The canonical Caddyfile template lives in cowork, so these tasks are

@@ -11,6 +11,12 @@
   # no pip packages inside Homebrew ansible's private virtualenv
   vars:
     ansible_become_pass: "{{ lookup('pipe', 'security find-generic-password -s ansible-sudo -w') }}"
+    # Pinned by every homebrew module below. Their default searches
+    # /usr/local/bin first, which on studio is a stale Intel Homebrew under
+    # Rosetta -- so the default quietly provisioned the wrong prefix there.
+    # Hardcoded rather than derived: this play is macOS-only and the whole Mac
+    # fleet is Apple Silicon. An Intel Mac would need /usr/local here.
+    homebrew_prefix: /opt/homebrew
     homebrew_taps:
       - agavra/tap
       - darrylmorley/whatcable
@@ -201,6 +207,7 @@
       community.general.homebrew_tap:
         name: "{{ homebrew_taps }}"
         state: present
+        path: "{{ homebrew_prefix }}/bin"
 
     # Fast path: one batch install, same pattern as the casks below. On
     # failure the rescue reruns per formula so one broken formula can't
@@ -214,11 +221,13 @@
             update_homebrew: true
             name: "{{ homebrew_formulae }}"
             state: present
+            path: "{{ homebrew_prefix }}/bin"
       rescue:
         - name: Install packages individually (batch failed)
           community.general.homebrew:
             name: "{{ item }}"
             state: present
+            path: "{{ homebrew_prefix }}/bin"
           loop: "{{ homebrew_formulae }}"
           register: formula_results
           ignore_errors: true
@@ -240,6 +249,7 @@
           community.general.homebrew_cask:
             name: "{{ homebrew_casks_allowed }}"
             state: present
+            path: "{{ homebrew_prefix }}/bin"
             # --adopt: take over an identical app already in /Applications
             # (e.g. installed manually before the playbook ran) instead of
             # erroring; no-op when absent or already brew-managed
@@ -250,6 +260,7 @@
           community.general.homebrew_cask:
             name: "{{ item }}"
             state: present
+            path: "{{ homebrew_prefix }}/bin"
             install_options: adopt
             sudo_password: "{{ ansible_become_pass }}"
           loop: "{{ homebrew_casks_allowed }}"
