@@ -453,6 +453,29 @@ if [[ -d "$COWORK_DIR/.git" ]]; then
     else
         (cd "$EXTERNAL_DIR/ContainerTools/container-compose" && npm install && npm run build)
     fi
+
+    # papercuts-mcp: the workflow-friction tracker over .papercuts/. It is OUR
+    # code, so it lives at src/papercuts-mcp rather than under _external/ —
+    # which is exactly where cowork's committed .mcp.json points. Origin is
+    # the tailnet origin over the tailnet: it used to live on Reddit's GHE, unreachable
+    # from a personal box, so no personal machine ever had it and the server
+    # was one laptop away from being lost outright (cowork-vey, 2026-08-25).
+    PAPERCUTS_DIR="$COWORK_DIR/src/papercuts-mcp"
+    if [[ ! -d "$PAPERCUTS_DIR" ]]; then
+        git clone "${ORIGIN_USER}@${ORIGIN_HOST}:git/papercuts-mcp.git" "$PAPERCUTS_DIR"
+    fi
+    # node_modules, not dist/, for the same reason as the checkouts above: it is
+    # gitignored, so it actually reports whether THIS checkout was installed.
+    if [[ -d "$PAPERCUTS_DIR/node_modules" ]]; then
+        info "papercuts-mcp already installed."
+    elif command -v npm >/dev/null 2>&1; then
+        (cd "$PAPERCUTS_DIR" && npm ci && npm run build)
+    else
+        info "npm not found — skipping papercuts-mcp install."
+    fi
+    # No ~/.claude.json step, unlike private-journal: cowork's .mcp.json already
+    # registers papercuts project-scoped at dist/src/index.js, so a built
+    # checkout is all it needs.
     if [[ ! -d "$EXTERNAL_DIR/omnifocus-cli" ]]; then
         git clone git@github.com:Packetslave/omnifocus-cli.git "$EXTERNAL_DIR/omnifocus-cli"
     fi
