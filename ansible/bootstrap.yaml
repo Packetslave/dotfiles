@@ -45,6 +45,7 @@
       - sops
       - starship
       - stripe-cli # `stripe trigger`, the online half of chassis's billing tests
+      - superfile # TUI file manager; the binary is `spf`, not `superfile`
       - tig
       - tmux
       - trufflehog
