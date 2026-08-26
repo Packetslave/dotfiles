@@ -48,7 +48,6 @@
       - ffmpeg
       - firebase-cli
       - git-extras
-      - glow
       - go
       - grafanactl
       - grpcurl

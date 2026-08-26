@@ -1,6 +1,7 @@
 karabiner/automatic_backups
 emacs/#emacs#
 tmux/plugins
+yazi/plugins
 emacs/emacs.d/straight
 emacs/emacs.d/ido.last
 **/.DS_Store

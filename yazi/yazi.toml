@@ -1,0 +1,8 @@
+[[plugin.prepend_previewers]]
+mime = "text/markdown"
+run = "piper"
+
+[[plugin.prepend_previewers]]
+url = "*.md"
+run = 'piper -- glow -w=$w -s=dracula "$1"'
+

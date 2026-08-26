@@ -32,6 +32,7 @@
       - gh
       - git
       - git-delta
+      - glow # yazi previews markdown through it (see yazi/yazi.toml)
       - golangci-lint
       - jq # claude/statusline.sh parses JSON with it
       - librsvg # rsvg-convert, the SVG->PNG/PDF render path
@@ -45,11 +46,11 @@
       - sops
       - starship
       - stripe-cli # `stripe trigger`, the online half of chassis's billing tests
-      - superfile # TUI file manager; the binary is `spf`, not `superfile`
       - tig
       - tmux
       - trufflehog
       - uv
+      - yazi
       - yq
       - zoxide
     # Casks are not macOS-only under Homebrew 6: claude-code resolves per
@@ -167,6 +168,15 @@
       ansible.builtin.file:
         src: ~/dotfiles/eza
         dest: ~/.config/eza
+        state: link
+
+    # Whole-dir link, like eza: `ya pkg` writes plugins/ and package.toml
+    # inside the config dir, so the repo has to be what yazi is looking at.
+    # plugins/ itself is gitignored — see the "Install yazi plugins" task.
+    - name: Create links - yazi configs
+      ansible.builtin.file:
+        src: ~/dotfiles/yazi
+        dest: ~/.config/yazi
         state: link
 
     # Opts in to yt-dlp's EJS challenge solver (needs deno) — without it
@@ -321,6 +331,15 @@
         name: "{{ homebrew_common_casks }}"
         state: present
         path: "{{ homebrew_prefix }}/bin"
+
+    # Down here rather than with the other yazi task because `ya` ships with
+    # the yazi formula, so it does not exist until the install above has run.
+    # plugins/ is gitignored; this restores it from the pinned rev+hash in
+    # yazi/package.toml, the same job tpm does for tmux/plugins.
+    - name: Install yazi plugins
+      ansible.builtin.command:
+        cmd: "{{ homebrew_prefix }}/bin/ya pkg install"
+        creates: "{{ ansible_facts.env.HOME }}/dotfiles/yazi/plugins/piper.yazi"
 
     # Local web server on :2015 (see configs/README.md in the cowork repo).
     # The canonical Caddyfile template lives in cowork, so these tasks are
