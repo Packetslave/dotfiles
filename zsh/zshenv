@@ -1,5 +1,5 @@
 #!/usr/bin/env zsh
-# shellcheck shell=bash disable=SC2034
+# shellcheck shell=bash disable=SC2034,SC1091
 
 # zsh reads this file for *every* shell, including the non-interactive one that
 # `ssh host <command>` spawns — zshrc is interactive-only. Without it a remote
@@ -24,4 +24,15 @@ if [[ -z "$HOMEBREW_PREFIX" ]] ; then
     fi
   done
   unset _brew
+fi
+
+# studio kept this in a hand-written ~/.zshenv that this file now replaces, and
+# it is the only machine with a Rust toolchain. It belongs here on the merits
+# anyway: cargo's env script only prepends ~/.cargo/bin to PATH, which is
+# exactly the job of this file. The script guards against double-prepending and
+# prints nothing, so it is safe for the non-interactive case above.
+# An if block rather than `[[ ... ]] && ...`: as the last line of the file the
+# && form would leave a non-zero $? in every shell that has no cargo.
+if [[ -f "$HOME/.cargo/env" ]] ; then
+  . "$HOME/.cargo/env"
 fi

@@ -228,11 +228,15 @@
     # zshrc covers interactive shells only, so `ssh host <command>` (which is
     # how mosh starts mosh-server) never saw the Homebrew prefix. zshenv is the
     # one startup file zsh reads for non-interactive shells too.
+    # force, because studio carries a hand-written ~/.zshenv that predates this
+    # task; without it ansible refuses to convert a file into a link. That
+    # file's only content was cargo's env script, which zshenv now sources.
     - name: Create links - zsh env
       ansible.builtin.file:
         src: ~/dotfiles/zsh/zshenv
         dest: ~/.zshenv
         state: link
+        force: true
 
     - name: Create links - p10k config
       ansible.builtin.file:
