@@ -264,6 +264,16 @@
         state: link
         force: true
       when: not reddit_machine.stat.exists
+    # Global instructions for every Claude Code session on the machine, in any
+    # repo. Managed here rather than written straight into ~/.claude so it is
+    # the same on every host instead of wherever it happened to be typed.
+    - name: Create links - claude global instructions
+      ansible.builtin.file:
+        src: ~/dotfiles/claude/CLAUDE.md
+        dest: ~/.claude/CLAUDE.md
+        state: link
+        force: true
+      when: not reddit_machine.stat.exists
 
     # path, because the module searches /usr/local/bin *first* by default and
     # studio carries two prefixes: an Intel Homebrew under Rosetta beside the
