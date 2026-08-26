@@ -1,0 +1,27 @@
+#!/usr/bin/env zsh
+# shellcheck shell=bash disable=SC2034
+
+# zsh reads this file for *every* shell, including the non-interactive one that
+# `ssh host <command>` spawns — zshrc is interactive-only. Without it a remote
+# command sees just the bare PATH sshd hands out (/usr/bin:/bin:/usr/sbin:/sbin
+# on macOS), so anything installed by Homebrew is invisible. That is why
+# `mosh lunchbox` could not find mosh-server without --server=, and why the
+# claude() wrapper in zshrc has to pin the brew prefix by hand.
+
+# The brew loop below also runs in zshrc, which is not redundant: on macOS
+# /etc/zprofile runs path_helper *after* this file and demotes Homebrew below
+# /usr/bin for login shells, so zshrc's re-run is what restores precedence.
+# Tying path/PATH as unique keeps that second pass from stacking duplicates.
+typeset -U path PATH
+
+# shellenv costs ~11ms (a fork), and it exports HOMEBREW_PREFIX — so gate on it
+# and child shells inherit the environment instead of paying again.
+if [[ -z "$HOMEBREW_PREFIX" ]] ; then
+  for _brew in /opt/homebrew/bin/brew /home/linuxbrew/.linuxbrew/bin/brew /usr/local/bin/brew ; do
+    if [ -x "$_brew" ] ; then
+      eval "$("$_brew" shellenv)"
+      break
+    fi
+  done
+  unset _brew
+fi
