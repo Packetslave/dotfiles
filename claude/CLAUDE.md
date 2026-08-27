@@ -4,6 +4,30 @@ Applies to every Claude Code session on this machine, in any repository.
 Project-level `CLAUDE.md` files add to this; where they genuinely conflict, the
 project file wins.
 
+## Staging commits
+
+**Never `git add -A`, `git add .`, or `git commit -a`.** Stage explicit paths,
+in every repository, every time.
+
+The reason is not tidiness. Several Claude Code sessions can be running against
+one checkout at once, and unrelated work is routinely sitting in the tree beside
+yours — another session's in-flight edits, a hook's regenerated file, a build
+artifact. A blanket stage sweeps all of it into your commit, under your message,
+and the mistake is invisible in the commit you just made: nothing errors, and
+the diff looks like something you wrote. It has happened (2026-08-27, cowork —
+a parallel session's uncommitted skill edit, caught only because the diffstat
+was read before committing).
+
+- **`git status` is not a list of *your* changes.** Diff each path before you
+  stage it.
+- **Re-check `git status` between commits** — the tree moves under you.
+- If a file you did not touch is dirty, leave it alone and say so in the report.
+- Staging a generated or exported file (a JSONL export, a lockfile)? Confirm its
+  diff contains only your own changes first.
+
+`git add -p` is fine, as is `git add <path>` for a file or directory you
+genuinely own in full.
+
 ## Searching the filesystem
 
 **Never run a full recursive scan of the filesystem root or the home
