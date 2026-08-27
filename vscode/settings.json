@@ -17,8 +17,7 @@
   "sync.forceUpload": true,
   "bazel.showExtensionLog": true,
   "python.jediEnabled": false,
-  "terminal.integrated.fontFamily": "PragmataPro",
-  "terminal.integrated.fontSize": 14,
+  "terminal.integrated.fontSize": 16,
   "go.useLanguageServer": true,
   "editor.formatOnSave": true,
   "editor.formatOnType": true,
@@ -33,7 +32,8 @@
     120
   ],
   "workbench.tree.renderIndentGuides": "always",
-  "editor.fontFamily": "'Cascadia Code', Menlo, Monaco, 'Courier New', monospace",
+  "editor.fontFamily": "'Monaspace Argon NF', Menlo, Monaco, 'Courier New', monospace",
+  "editor.fontWeight": "500",
   "files.watcherExclude": {
     "**/.terraform/*/**": true
   },
@@ -415,5 +415,8 @@
   },
   "docker.extension.enableComposeLanguageServer": false,
   "workbench.colorTheme": "Solarized Dark",
-  "aws.cloudformation.telemetry.enabled": false
+  "aws.cloudformation.telemetry.enabled": false,
+  "claudeCode.preferredLocation": "panel",
+  "terminal.integrated.fontFamily": "Monaspace Argon NF",
+  "terminal.integrated.fontWeight": "500"
 }
