@@ -127,6 +127,11 @@
     homebrew_casks_allowed: >-
       {{ homebrew_casks | difference(claude_casks)
          if reddit_machine.stat.exists else homebrew_casks }}
+    # Kept as a var so the desired bytes can be hashed and compared against
+    # the on-disk file before escalating -- see "Enable Touch ID for sudo"
+    sudo_local_content: |
+      auth       optional       /opt/homebrew/lib/pam/pam_reattach.so ignore_ssh
+      auth       sufficient     pam_tid.so
 
   tasks:
     # Also checked in bootstrap.yaml — repeated here so this playbook
@@ -303,17 +308,33 @@
 
     # Touch ID for sudo, update-proof (sudo_local survives macOS updates);
     # pam_reattach makes it work inside tmux/screen, ignore_ssh keeps SSH
-    # sessions on the password path
+    # sessions on the password path.
+    #
+    # The copy below needs become, and Ansible escalates *before* the module
+    # gets to decide it has nothing to do — so an unconditional task asks for
+    # Touch ID on every run. sudo_local is world-readable, so stat it without
+    # privileges first and only escalate when it actually differs.
+    - name: Check current Touch ID sudo config
+      ansible.builtin.stat:
+        path: /etc/pam.d/sudo_local
+        get_checksum: true
+        checksum_algorithm: sha1
+      register: sudo_local
+
     - name: Enable Touch ID for sudo
       become: true
       ansible.builtin.copy:
         dest: /etc/pam.d/sudo_local
-        content: |
-          auth       optional       /opt/homebrew/lib/pam/pam_reattach.so ignore_ssh
-          auth       sufficient     pam_tid.so
+        content: "{{ sudo_local_content }}"
         owner: root
         group: wheel
         mode: "0644"
+      when: >-
+        not sudo_local.stat.exists
+        or sudo_local.stat.checksum != (sudo_local_content | hash('sha1'))
+        or sudo_local.stat.pw_name != 'root'
+        or sudo_local.stat.gr_name != 'wheel'
+        or sudo_local.stat.mode != '0644'
 
     # Ctrl+arrow Mission Control/Spaces shortcuts swallow the keys before the
     # terminal sees them, breaking tmux's default pane-resize bindings
