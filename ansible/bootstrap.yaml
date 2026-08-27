@@ -37,6 +37,7 @@
       - glow # yazi previews markdown through it (see yazi/yazi.toml)
       - golangci-lint
       - jq # claude/statusline.sh parses JSON with it
+      - kubernetes-cli # the kubectl binary; formula name does not match the command
       - libpq # psql only, no server: chassis's managed PG is firewalled to its
         # droplet, so operator SQL runs from here through an SSH tunnel rather
         # than from a client installed on the app box. Keg-only — zsh/zshenv
