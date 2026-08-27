@@ -26,8 +26,10 @@
       - btop
       - caddy
       - cmark-gfm
+      - deno # JS runtime for yt-dlp's EJS challenge solver
       - eza
       - fd
+      - ffmpeg # audio extraction for the youtube-transcribe skill
       - fzf
       - gh
       - git

@@ -37,7 +37,6 @@
       - container
       - coreutils
       - csvkit
-      - deno # JS runtime for yt-dlp's EJS challenge solver
       - docker
       - docker-compose
       - dockutil
@@ -45,7 +44,6 @@
       - duti
       - felixkratz/formulae/borders
       - felixkratz/formulae/sketchybar
-      - ffmpeg
       - firebase-cli
       - git-extras
       - go
