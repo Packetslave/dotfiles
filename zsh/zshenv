@@ -26,6 +26,18 @@ if [[ -z "$HOMEBREW_PREFIX" ]] ; then
   unset _brew
 fi
 
+# libpq is keg-only, so brew links none of it: psql, pg_dump and friends exist
+# under $HOMEBREW_PREFIX/opt/libpq/bin and nowhere else. Here rather than in
+# zshrc because the case that wants it most is non-interactive — an operator
+# reaching a firewalled managed database over `ssh -L` and running one query
+# from a script sees zshenv's PATH and never zshrc's.
+#
+# Guarded on the directory: the formula is not installed everywhere yet, and an
+# unconditional prepend would put a missing path in front of every lookup.
+if [[ -n "$HOMEBREW_PREFIX" && -d "$HOMEBREW_PREFIX/opt/libpq/bin" ]] ; then
+  path=("$HOMEBREW_PREFIX/opt/libpq/bin" $path)
+fi
+
 # studio kept this in a hand-written ~/.zshenv that this file now replaces, and
 # it is the only machine with a Rust toolchain. It belongs here on the merits
 # anyway: cargo's env script only prepends ~/.cargo/bin to PATH, which is

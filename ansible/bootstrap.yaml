@@ -35,6 +35,10 @@
       - glow # yazi previews markdown through it (see yazi/yazi.toml)
       - golangci-lint
       - jq # claude/statusline.sh parses JSON with it
+      - libpq # psql only, no server: chassis's managed PG is firewalled to its
+        # droplet, so operator SQL runs from here through an SSH tunnel rather
+        # than from a client installed on the app box. Keg-only — zsh/zshenv
+        # puts its bin on PATH.
       - librsvg # rsvg-convert, the SVG->PNG/PDF render path
       - mosh
       - neovim
