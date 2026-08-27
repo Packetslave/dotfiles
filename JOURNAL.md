@@ -1,5 +1,76 @@
 # Journal
 
+## 2026-08-27 — terminal plumbing: mouse, clipboard, and one upstream dead end
+
+Four terminal nits. Three fixed; the fourth turned out to be a Claude Code
+bug, recorded here so nobody burns another hour re-deriving it.
+
+- **Mouse scrolling in tmux** (in `745414e`). `mouse` was never set, so tmux
+  left the wheel to WezTerm, which only scrolls its own useless scrollback.
+  Apps that request mouse reporting themselves (Claude Code, htop) worked
+  anyway — that asymmetry was the clue. `mouse on` alone is not enough:
+  tmux's stock `WheelUpPane` forwards raw mouse events to *any*
+  alternate-screen pane, and `less`/`man` never asked for them. The binding
+  now dispatches on `mouse_any_flag` **before** `alternate_on` — a full-screen
+  app that requested mouse is both, and must get raw events. Nested tmux
+  composes for free: an inner tmux with `mouse on` sets mouse mode on its tty,
+  so the outer one sees `mouse_any_flag` and forwards.
+- **A session-level `mouse off` shadowed the global on mfa1.** `set -g mouse on`
+  looked applied but the session option won. Worth remembering: `prefix + r`
+  sources the config and sets *global* options — it does not clear
+  session-scoped overrides, which outlive reloads for the life of the server.
+  Diagnose with `tmux show-options -v mouse` (session) vs `-gv` (global).
+- **Copies now reach the Mac's clipboard from anywhere** (`aff5921`). Transport
+  is OSC 52. Two tmux defaults blocked it: `set-clipboard` defaults to
+  `external`, which ignores OSC 52 from apps *inside* a pane, and
+  `allow-passthrough` defaults to off. That fixed three of four cases. The
+  fourth — SSH + tmux — needed `tmux/osc52-copy.sh` on an `after-load-buffer`
+  hook, because Claude Code picks its clipboard strategy in the order
+  native → tmux-buffer → osc52, and on a headless Linux box with `$TMUX` set
+  it lands on `tmux load-buffer`, which fills a buffer and stops. It never
+  reads `set-clipboard`, so no tmux option changes that choice.
+- **WezTerm selection colour** (`f98904b`). Stock Tokyo Night's `#283457` sits
+  at 1.4:1 against the `#1a1b26` background — the *band* was invisible, not the
+  text (7.6:1, always fine). Now `#264f78` with `selection_fg = 'none'` so
+  selected text keeps its own colours.
+
+### Claude Code's selection colour inside tmux — upstream, do not chase
+
+Claude Code paints its own selection (it handles the mouse itself), and inside
+tmux that highlight renders as a washed-out sage instead of its true `#264f78`.
+Sampled from screenshots: `#5f8787`, which is **exactly xterm-256 index 66** — a
+6x6x6 cube value. True-RGB colours do not land on cube values by accident, so
+Claude Code is choosing from a 256-colour palette. Note it is *not* a downsample
+of its own blue, which would quantize to index 24 (`#005f87`).
+
+Identical wrong colour on both hosts inside tmux, correct colour outside, so
+this is tmux and not the machine — mfa1 was incidental.
+
+Ruled out by measurement, in this order:
+
+| tried | result |
+|---|---|
+| `set -as terminal-features ',*:RGB'` | no change (governs tmux→terminal, not what the pane sees) |
+| `FORCE_COLOR=3` | no change — which rules out colour *capability* entirely |
+| `TERM_PROGRAM=WezTerm` | no change |
+| `TERM=xterm-256color` | no change |
+
+The trigger is `$TMUX` itself: Claude Code checks it and unconditionally
+degrades to 256 colours, ignoring `COLORTERM=truecolor`. Filed upstream as
+[#60788](https://github.com/anthropics/claude-code/issues/60788) and
+[#39566](https://github.com/anthropics/claude-code/issues/39566). Nothing in
+tmux config can reach it; the fix has to be upstream honouring `COLORTERM`.
+
+Decision: live with it. `env -u TMUX claude` would likely restore true colour by
+dodging the check, but **do not do this on mfa1** — unsetting `$TMUX` changes
+which clipboard branch Claude Code takes and would break the OSC 52 path above.
+
+Method note for next time: every *measurement* held up (the cube-index
+identification, tmux as the variable, both hosts identical). Every *prediction*
+about the fix was wrong until the search. When a symptom points at a closed-
+source tool's internals, search for a filed issue before reasoning about the
+rendering path.
+
 ## 2026-08-25 — the Linux side stops being a second-class citizen
 
 Provisioning mfa1 (Ubuntu 24.04 mini) as a full Claude Code box exposed

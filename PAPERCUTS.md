@@ -23,3 +23,16 @@ two sentences each (guess at cause/fix is a bonus).
   pointer to `ya env` — and `ya env` doesn't report the config directory at
   all. `ya pkg list` was the workable check that the config dir resolved
   through a symlink, since it reads package.toml and prints the pinned rev.
+- 2026-08-27: `ls -t <dir>` fails in this shell — `ls` is aliased to eza, whose
+  `-t` means `--time <FIELD>`, so it errors with "invalid value for --time"
+  instead of sorting by mtime. Bit me listing `~/.local/share/wezterm`. Use
+  `command ls -t` (or eza's `-s modified`) when a script wants real `ls`
+  semantics; worth remembering that any snippet copied from the web with
+  `ls -t` in it will misfire here.
+- 2026-08-27: no way to see which clipboard strategy Claude Code picked
+  without watching its UI text — it prints "copied N chars to clipboard" vs
+  "to tmux buffer" vs "sent N via OSC 52", and those strings are the only
+  signal. There is a `clipboard: setClipboard mux= ssh= native= predicted=
+  emit= bytes=` debug line in the binary, but nothing surfaced it in normal
+  use. Made the SSH+tmux clipboard bug look unfixed when the copy had in fact
+  worked (the hook fires after the buffer is set, so the message is stale).
