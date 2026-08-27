@@ -25,6 +25,13 @@ config.use_fancy_tab_bar = false
 local TAB_WIDTH = 24
 config.tab_max_width = TAB_WIDTH
 config.colors = {
+  -- Selection: match Claude Code's own highlight, which reads far better than
+  -- stock Tokyo Night's #283457 (only 1.4:1 against the #1a1b26 background --
+  -- the band was the invisible part, not its text). Sampled from a screenshot
+  -- of a Claude Code selection; it is background-only, so 'none' leaves the
+  -- text in its original colours rather than flattening it to one foreground.
+  selection_fg = 'none',
+  selection_bg = '#264f78',
   tab_bar = {
     background = '#000000',
     active_tab = { bg_color = '#ffffff', fg_color = '#000000', intensity = 'Bold' },
