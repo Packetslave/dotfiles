@@ -372,6 +372,14 @@ alias taildrop='tailscale file cp'
 
 eval "$(starship init zsh)"
 
+function y() {
+	local tmp cwd; tmp="$(mktemp -t "yazi-cwd.XXXXXX")"
+	command yazi "$@" --cwd-file="$tmp"
+	IFS= read -r -d '' cwd < "$tmp"
+	[ "$cwd" != "$PWD" ] && [ -d "$cwd" ] && builtin cd -- "$cwd" || builtin true
+	command rm -f -- "$tmp"
+}
+
 # SSH into a Mac and the login keychain is NOT unlocked: there is no GUI
 # session to unlock it, so anything wanting a secret from it fails with
 # "User interaction is not allowed" (security exits 36) instead of prompting.
@@ -386,7 +394,9 @@ eval "$(starship init zsh)"
 # of the line below.
 if [[ -o interactive && -n "$SSH_CONNECTION" && "$OSTYPE" == darwin* ]] ; then
   if ! security show-keychain-info &>/dev/null ; then
+    >&2 print -P "============================================================================"
     >&2 print -P "%F{yellow}🔑 login keychain is locked%f — %F{cyan}security unlock-keychain%f"
+    >&2 print -P "============================================================================"
   fi
 fi
 
