@@ -476,6 +476,19 @@ if [[ -d "$COWORK_DIR/.git" ]]; then
     # No ~/.claude.json step, unlike private-journal: cowork's .mcp.json already
     # registers papercuts project-scoped at dist/src/index.js, so a built
     # checkout is all it needs.
+
+    # gmail-duckdb: OUR code, so src/gmail-duckdb rather than _external/. Its own
+    # repo because cowork gitignores src/ outright — the 2026-08-28 design pass
+    # nearly filed it inside the cowork repo before that was noticed. No build
+    # step: it is a uv-managed Python project. Only mfa1 actually runs it (the
+    # archive and the hourly timer live there), but every machine clones it so
+    # the code is never one disk away from being lost.
+    GMAIL_DUCKDB_DIR="$COWORK_DIR/src/gmail-duckdb"
+    if [[ ! -d "$GMAIL_DUCKDB_DIR" ]]; then
+        git clone "${ORIGIN_USER}@${ORIGIN_HOST}:git/gmail-duckdb.git" "$GMAIL_DUCKDB_DIR"
+    else
+        info "gmail-duckdb checkout already present."
+    fi
     if [[ ! -d "$EXTERNAL_DIR/omnifocus-cli" ]]; then
         git clone git@github.com:Packetslave/omnifocus-cli.git "$EXTERNAL_DIR/omnifocus-cli"
     fi
