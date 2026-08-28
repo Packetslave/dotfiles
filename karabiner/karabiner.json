@@ -4,8 +4,22 @@
             "complex_modifications": {
                 "rules": [
                     {
-                        "description": "Caps Lock → Control when held, Escape when tapped",
+                        "description": "Caps Lock → Control (plain Control on the built-in keyboard, Escape when tapped elsewhere)",
                         "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "identifiers": [{ "is_built_in_keyboard": true }],
+                                        "type": "device_if"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "caps_lock",
+                                    "modifiers": { "optional": ["any"] }
+                                },
+                                "to": [{ "key_code": "left_control" }],
+                                "type": "basic"
+                            },
                             {
                                 "from": {
                                     "key_code": "caps_lock",

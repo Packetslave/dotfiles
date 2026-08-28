@@ -1,5 +1,25 @@
 # Journal
 
+## 2026-08-27 — caps lock: Control only on the built-in keyboard
+
+Caps lock has been Control-when-held, Escape-when-tapped on every keyboard.
+The tap kept firing by accident on the laptop's own keyboard, while the
+Kinesis still wants it. Now one rule with two manipulators: the first carries
+a `device_if` condition on `is_built_in_keyboard` and maps to plain
+`left_control`, the second is the untouched fallback with `to_if_alone`.
+Manipulators match in order and the first one wins, so the fallback needs no
+`device_unless`.
+
+The condition could not be a vendor/product pair like the Kinesis entries in
+`devices`. `karabiner_cli --list-connected-devices` reports the Apple Internal
+Keyboard with no vendor_id or product_id at all — transport FIFO, identifiers
+just `is_keyboard` — so `is_built_in_keyboard` is the only handle it offers,
+and it is valid inside a `device_if` as well as in the `devices` array.
+
+Checked, not assumed: the rules lint clean, and the live internal keyboard
+does report `is_built_in_keyboard: true`. The Kinesis was unplugged, so the
+external path is reasoned rather than observed.
+
 ## 2026-08-27 — terminal plumbing: mouse, clipboard, and one upstream dead end
 
 Four terminal nits. Three fixed; the fourth turned out to be a Claude Code

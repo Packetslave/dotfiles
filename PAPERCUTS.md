@@ -36,3 +36,9 @@ two sentences each (guess at cause/fix is a bonus).
   emit= bytes=` debug line in the binary, but nothing surfaced it in normal
   use. Made the SSH+tmux clipboard bug look unfixed when the copy had in fact
   worked (the hook fires after the buffer is set, so the message is stale).
+- 2026-08-27: `karabiner_cli --lint-complex-modifications` will not read
+  karabiner.json — it wants a standalone `{title, rules}` file, so validating a
+  rule edit means extracting `profiles[0].complex_modifications.rules` to a
+  temp file first. Karabiner also logs nothing when it reloads the config, so
+  ~/.local/share/karabiner/log can't tell you whether an edit took effect;
+  press the key instead.
