@@ -162,6 +162,23 @@
         state: link
         force: true
 
+    # Mouseless 1.0.0 moved its config out of the sandbox container to
+    # Application Support. Link the whole configs dir rather than
+    # config.yaml: the app rewrites that file on version migration,
+    # leaving a .bak beside it (gitignored), and a rewrite would replace
+    # a file symlink. licenses/ and logs/ stay machine-local — the paid
+    # licence must not reach this public repo.
+    - name: Create links - mouseless dir
+      ansible.builtin.file:
+        path: "~/Library/Application Support/Mouseless/"
+        state: directory
+    - name: Create links - mouseless config dir
+      ansible.builtin.file:
+        src: ~/dotfiles/mouseless/configs
+        dest: "~/Library/Application Support/Mouseless/configs"
+        state: link
+        force: true
+
     - name: Create links - vscode dir
       ansible.builtin.file:
         path: "~/Library/Application Support/Code/User/"

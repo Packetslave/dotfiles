@@ -7,3 +7,4 @@ emacs/emacs.d/ido.last
 **/.DS_Store
 .codex-backup/
 .private-journal/
+mouseless/configs/*.bak
