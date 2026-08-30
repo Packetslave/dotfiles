@@ -363,7 +363,9 @@ claude() {
     "$claude_bin --enable-auto-mode ${(j: :)${(q)@}}"
 }
 
-alias p8='sudo mtr -z 8.8.8.8'
+# $(command -v mtr): brew puts mtr in sbin, which is not on sudo's
+# secure_path on Linux, so a bare `sudo mtr` is command-not-found there.
+alias p8='sudo $(command -v mtr) -z 8.8.8.8'
 alias crg='rg --color=always'
 alias cbat='bat --color=always'
 alias codex='echo WARNING - using stdio MCP wrapper script >&2; $HOME/src/SameBrain/Scripts/codex-mcp-stdio'
