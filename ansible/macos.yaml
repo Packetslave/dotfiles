@@ -40,7 +40,6 @@
       - docker
       - docker-compose
       - dockutil
-      - doggo
       - duti
       - felixkratz/formulae/borders
       - felixkratz/formulae/sketchybar
@@ -53,7 +52,6 @@
       - hunk
       - iperf3
       - k9s
-      - kubernetes-cli
       - kubetail
       - lazydocker
       - lima # chassis deploy rehearsal VMs (make rehearse-up)
@@ -61,8 +59,6 @@
       - mactop
       - marp-cli
       - mas # needed by the App Store install task below
-      - mtr
-      - nmap
       - nvm
       - opencode
       - openjdk

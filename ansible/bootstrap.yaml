@@ -28,6 +28,8 @@
       - caddy
       - cmark-gfm
       - deno # JS runtime for yt-dlp's EJS challenge solver
+      - doggo # the `dg` alias in zsh/zshrc; a dig replacement
+      - duckdb # src/gmail-duckdb runs its queries through it
       - eza
       - fd
       - ffmpeg # audio extraction for the youtube-transcribe skill
@@ -45,7 +47,9 @@
         # puts its bin on PATH.
       - librsvg # rsvg-convert, the SVG->PNG/PDF render path
       - mosh
+      - mtr # the `p8` alias in zsh/zshrc
       - neovim
+      - nmap
       - node # .mcp.json launches node; instapaper-mcp build needs npm
       - opentofu
       - powerlevel10k
