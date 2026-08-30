@@ -38,6 +38,23 @@ if [[ -n "$HOMEBREW_PREFIX" && -d "$HOMEBREW_PREFIX/opt/libpq/bin" ]] ; then
   path=("$HOMEBREW_PREFIX/opt/libpq/bin" $path)
 fi
 
+# bd (beads) resolves its workspace by walking up from the cwd. The projects
+# under ~/src/cowork/src -- chassis, homelab, gmail-duckdb, matrix -- are
+# separate git repos with no .beads of their own, so the walk stops at their
+# root and bd fails with "no beads database found", suggesting `bd init`, which
+# would be actively wrong: it would create a second database inside the nested
+# repo. cowork's is authoritative for all of them.
+#
+# Here rather than in zshrc for the usual reason: the shells that hit this are
+# non-interactive -- an agent's tool call, a hook, `ssh host bd ...`, a cron
+# job -- and those never read zshrc. Guarded on the directory so a machine
+# without the checkout is left alone; a bd invocation that genuinely wants a
+# different workspace can still override with `bd -C <path>` or its own
+# BEADS_DIR.
+if [[ -d "$HOME/src/cowork/.beads" ]] ; then
+  export BEADS_DIR="$HOME/src/cowork/.beads"
+fi
+
 # studio kept this in a hand-written ~/.zshenv that this file now replaces, and
 # it is the only machine with a Rust toolchain. It belongs here on the merits
 # anyway: cargo's env script only prepends ~/.cargo/bin to PATH, which is
