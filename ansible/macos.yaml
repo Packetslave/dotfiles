@@ -376,6 +376,15 @@
         cmd: /System/Library/PrivateFrameworks/SystemAdministration.framework/Resources/activateSettings -u
       changed_when: false
 
+    # Double-space at the end of a sentence types ". " instead of "  ".
+    # Mangles code, paths and passwords typed in any Cocoa text field.
+    - name: Disable double-space period substitution
+      community.general.osx_defaults:
+        domain: NSGlobalDomain
+        key: NSAutomaticPeriodSubstitutionEnabled
+        type: bool
+        value: false
+
     # Traditional scroll direction: swipe down scrolls the content down.
     # Running apps only pick this up after logout/login.
     - name: Disable natural scrolling
