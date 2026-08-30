@@ -299,6 +299,29 @@
         force: true
       when: not reddit_machine.stat.exists
 
+    # Claude Code deletes local session transcripts after cleanupPeriodDays,
+    # default 30. A machine offline longer than that does not sync late -- it
+    # loses that history permanently at its next launch. Found the hard way on
+    # 2026-08-30: lunchbox held 60 transcripts and zero older than 30 days.
+    #
+    # settings.json is NOT symlinked like the two files above, because Claude
+    # Code owns and rewrites it -- a link or template would be clobbered. The
+    # script merges this one key and leaves every other setting alone.
+    #
+    # check_mode: false is REQUIRED, not incidental. ansible.builtin.command is
+    # skipped under --check by default, so without it a check run would report
+    # nothing while looking green. The task instead always runs and passes
+    # --check through to the script, which is read-only in that mode.
+    - name: Set claude session retention
+      ansible.builtin.command:
+        cmd: >-
+          python3 ~/dotfiles/claude/set-retention.py 365
+          {{ '--check' if ansible_check_mode else '' }}
+      check_mode: false
+      register: claude_retention
+      changed_when: claude_retention.stdout is match('(CHANGED|WOULD-CHANGE)')
+      when: not reddit_machine.stat.exists
+
     # path, because the module searches /usr/local/bin *first* by default and
     # studio carries two prefixes: an Intel Homebrew under Rosetta beside the
     # native arm64 one. Left to the default, every run on that machine built a
@@ -382,6 +405,12 @@
         cmd: "{{ homebrew_prefix }}/bin/brew services info caddy --json"
       register: caddy_service_info
       changed_when: false
+      # Must run under --check too. command is skipped in check mode by
+      # default, which would leave caddy_service_info.stdout empty and make the
+      # next task's `| from_json` fail the whole playbook -- so `--check` could
+      # not complete at all on any host with a cowork Caddyfile. Safe to run
+      # during a dry run: `brew services info` only reads.
+      check_mode: false
 
     - name: Start caddy as a brew service
       when:
