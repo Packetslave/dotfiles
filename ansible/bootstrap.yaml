@@ -170,6 +170,62 @@
         state: link
         force: true
 
+    # Log this machine in to the self-hosted atuin sync server, so shell
+    # history is shared across the tailnet. The credentials live sops-encrypted
+    # in the homelab repo, which is checked out inside the sibling cowork repo
+    # -- so, like the Caddyfile tasks below, these are skipped entirely until
+    # that file is present and readable.
+    #
+    # THE MISSING-SECRET SKIP IS THE SAFETY MECHANISM, not an oversight. Only
+    # machines enrolled as sops recipients can decrypt it, so seaside (public
+    # facing), bug, and mfa2/mfa3 no-op here without needing a hostname
+    # allowlist that someone would have to remember to maintain.
+    - name: Check for the atuin sync secret in the homelab repo
+      ansible.builtin.stat:
+        path: "{{ ansible_facts.env.HOME }}/src/cowork/src/homelab/secrets/atuin.enc.env"
+      register: atuin_secret
+
+    # `atuin status` exits 1 when logged out, writes its message to STDERR, and
+    # leaves stdout EMPTY -- so the gate below is the return code. Matching a
+    # string in stdout looks equivalent and silently never fires.
+    - name: Check atuin login status
+      when: atuin_secret.stat.exists
+      ansible.builtin.command:
+        cmd: "{{ homebrew_prefix }}/bin/atuin status"
+      register: atuin_login_status
+      changed_when: false
+      failed_when: false
+      # Must run under --check too, for the same reason as the `brew services
+      # info` task below: skipping it would leave atuin_login_status.rc
+      # undefined and fail the two tasks that gate on it. Safe -- status reads.
+      check_mode: false
+
+    # Before the first login, so existing local history is carried up rather
+    # than stranded. Verified idempotent on atuin 18.19.0 (a second `import
+    # auto` over the same history file adds no rows), but it only ever runs on
+    # the not-logged-in path anyway, which makes it once per machine.
+    - name: Import existing shell history before the first atuin login
+      when:
+        - atuin_secret.stat.exists
+        - atuin_login_status.rc != 0
+      ansible.builtin.command:
+        cmd: "{{ homebrew_prefix }}/bin/atuin import auto"
+
+    # sops needs both PATH and its key file spelled out: this runs under
+    # /bin/sh, not the login shell that zshrc exports SOPS_AGE_KEY_FILE from.
+    # The credentials are expanded by the child shell sops spawns, so they
+    # never appear in the command line ansible logs.
+    - name: Log in to the self-hosted atuin sync server
+      when:
+        - atuin_secret.stat.exists
+        - atuin_login_status.rc != 0
+      ansible.builtin.command:
+        cmd: >-
+          {{ homebrew_prefix }}/bin/sops exec-env {{ atuin_secret.stat.path }}
+          '{{ homebrew_prefix }}/bin/atuin login -u "$ATUIN_USERNAME" -p "$ATUIN_PASSWORD" -k "$ATUIN_KEY"'
+      environment:
+        SOPS_AGE_KEY_FILE: "{{ ansible_facts.env.HOME }}/.config/sops/age/keys.txt"
+
     - name: Create links - dig configs
       ansible.builtin.file:
         src: ~/dotfiles/dig/digrc

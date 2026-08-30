@@ -23,13 +23,17 @@
 # timezone = "local"
 
 ## enable or disable automatic sync
-# auto_sync = true
+auto_sync = true
 
 ## enable or disable automatic update checks
 # update_check = true
 
 ## address of the sync server
-# sync_address = "https://api.atuin.sh"
+## Self-hosted in the k3s cluster and published as a tailnet-only device by the
+## Tailscale Kubernetes operator, so this name resolves and is reachable only
+## from the tailnet. Not a credential -- membership is still required to reach
+## it, and the account itself is password + key protected.
+sync_address = "https://atuin.burmese-kitchen.ts.net"
 
 ## how often to sync history. note that this is only triggered when a command
 ## is ran, so sync intervals may well be longer
