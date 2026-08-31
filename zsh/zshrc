@@ -117,6 +117,38 @@ else
   echo >&2 "git clone --depth 1 https://github.com/ohmyzsh/ohmyzsh.git ~/src/external/oh-my-zsh"
 fi
 
+# Staleness nag: warn when this machine has drifted — bootstrap not run for
+# 30 days (or never recorded), or the cowork checkout behind/dirty for a
+# week. Offline and cheap (no fetch; compares against last-fetched refs);
+# throttled to once per 12h. The always-on hosts also get alerted on this by
+# the git-drift poller on sparepi5; this nag is what covers the laptops.
+_drift_nag() {
+  local now=$(date +%s) cache=~/.cache/drift-nag-last
+  [[ -f $cache ]] && (( now - $(<$cache) < 12*3600 )) && return
+  mkdir -p ~/.cache && echo $now >| $cache
+  local stamp=~/.local/state/bootstrap-last-run
+  if [[ ! -f $stamp ]]; then
+    echo >&2 "WARNING: no bootstrap stamp on this machine — run \`ap\` to converge it"
+  elif (( now - $(<$stamp) > 30*86400 )); then
+    echo >&2 "WARNING: bootstrap last ran $(( (now - $(<$stamp)) / 86400 ))d ago — run \`ap\`"
+  fi
+  local repo=~/src/cowork
+  [[ -d $repo/.git ]] || return
+  local behind=$(git -C $repo rev-list --count 'HEAD..@{u}' 2>/dev/null)
+  (( ${behind:-0} > 0 )) && echo >&2 "WARNING: cowork is $behind commit(s) behind last-fetched origin — pull"
+  local f m oldest=0
+  git -C $repo status --porcelain 2>/dev/null | cut -c4- | sed 's/.* -> //' | while IFS= read -r f; do
+    [[ -e $repo/$f ]] || continue
+    if [[ $OSTYPE == darwin* ]]; then m=$(stat -f %m -- $repo/$f 2>/dev/null)
+    else m=$(stat -c %Y -- $repo/$f 2>/dev/null); fi
+    [[ -n $m ]] && (( oldest == 0 || m < oldest )) && oldest=$m
+    (( oldest > 0 && now - oldest > 7*86400 )) && \
+      { echo >&2 "WARNING: cowork has uncommitted changes >7d old (git -C ~/src/cowork status)"; break }
+  done
+  return 0
+}
+_drift_nag
+
 # Why aren't these defined?
 alias dk="docker kill"
 alias dka='docker kill $(docker ps -q)'

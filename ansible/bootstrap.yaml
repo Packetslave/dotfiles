@@ -487,3 +487,22 @@
 - name: Configure Linux
   ansible.builtin.import_playbook: linux.yaml
   when: ansible_facts['system'] == 'Linux'
+
+# Runs only when everything above (including the OS-specific playbooks)
+# succeeded, so the stamp means "this machine fully converged then". Read by
+# the zshrc staleness nag and by the git-drift poller on sparepi5
+# (homelab roles/git_drift, cowork-yprx).
+- name: Record bootstrap completion
+  hosts: localhost
+  tasks:
+    - name: Ensure the state directory exists
+      ansible.builtin.file:
+        path: "{{ ansible_facts.env.HOME }}/.local/state"
+        state: directory
+        mode: "0755"
+
+    - name: Write the bootstrap completion stamp
+      ansible.builtin.copy:
+        dest: "{{ ansible_facts.env.HOME }}/.local/state/bootstrap-last-run"
+        content: "{{ ansible_date_time.epoch }}\n"
+        mode: "0644"
