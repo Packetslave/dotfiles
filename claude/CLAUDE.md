@@ -22,6 +22,15 @@ was read before committing).
   stage it.
 - **Re-check `git status` between commits** — the tree moves under you.
 - If a file you did not touch is dirty, leave it alone and say so in the report.
+- **Never leave files staged across tool calls.** `git commit` commits the whole
+  INDEX, not the paths you just added — an earlier, forgotten `git rm --cached`
+  or `git add` rides along, and in a shared checkout a concurrent session's bare
+  `git commit` can sweep up *your* staged work under *its* message first. Put the
+  `git add` and the `git commit` in the SAME call, or skip the index entirely
+  with `git commit -F <file> -- <path> <path>`. The pathspec form needs the file
+  already tracked; for a new file, `git add <that one explicit path>` first, then
+  name every path on the commit. Verify with `git diff --cached --stat | tail -1`
+  before committing — if the file count surprises you, stop.
 - Staging a generated or exported file (a JSONL export, a lockfile)? Confirm its
   diff contains only your own changes first.
 
