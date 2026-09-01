@@ -371,6 +371,17 @@ claude() {
   # (regen the file with secrets/build-claude-startup.sh after editing secrets)
   # sops locates age-plugin-se via $PATH, so pin homebrew for non-interactive SSH
   local brew_bin="${HOMEBREW_PREFIX:-/opt/homebrew}/bin"
+  # A locked login keychain makes keychain-backed MCP credentials fail with
+  # opaque errors mid-session, so unlock it up front. show-keychain-info never
+  # prompts: it just exits non-zero ("User interaction is not allowed") when
+  # locked. Only worth doing on a Mac, and only with a TTY to type into.
+  if [[ "$OSTYPE" == darwin* && -t 0 ]] \
+     && ! /usr/bin/security show-keychain-info &>/dev/null ; then
+    >&2 echo "claude: login keychain is locked — unlocking"
+    /usr/bin/security unlock-keychain \
+      || >&2 echo "claude: keychain still locked — continuing anyway"
+  fi
+
   local secrets="$HOME/src/cowork/secrets/claude-startup.enc.env"
   local claude_bin sops_bin
   # whence -p, not command -v: inside this function the latter resolves to the
