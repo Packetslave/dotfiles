@@ -1,0 +1,65 @@
+#!/bin/sh
+# Launch chrome-devtools-mcp with a browser that exists on THIS machine.
+#
+# The server defaults to the Chrome "stable" channel and dies at browser-launch
+# time with
+#     Chromium distribution 'chrome' is not found at /opt/google/chrome/chrome
+# on any host without Google Chrome -- which is every Linux box here. The Macs
+# do have Chrome and must keep the default headed behaviour, so the flags
+# cannot simply be hardcoded in cowork's .mcp.json: that file is shared, and
+# baking them in would force the Macs onto a headless bundled Chromium.
+# Hence a launcher that decides per machine.
+#
+# Cost of not having this, measured 2026-09-01: both the chrome-devtools and
+# the Playwright MCP servers fail identically (they are pinned to the same
+# channel), so trying the other one is not the fallback it looks like.
+# See papercut 977c0b53.
+
+set -eu
+
+# 1. A real Chrome anywhere the server would find it: use its own defaults.
+for chrome in \
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
+    /opt/google/chrome/chrome \
+    /usr/bin/google-chrome \
+    /usr/bin/google-chrome-stable
+do
+    if [ -x "$chrome" ]; then
+        exec npx -y chrome-devtools-mcp@latest "$@"
+    fi
+done
+
+# 2. Otherwise fall back to the Chromium Playwright already installed for the
+# chassis e2e tests. Resolved by glob at launch rather than pinned, because the
+# server (tracking @latest) and the installed build drift apart on their own
+# schedules -- on 2026-09-01 it demanded chromium-1243 while chromium-1234 was
+# on disk, so any fix naming a build number rots. Newest wins.
+bundled=$(
+    ls -d "$HOME"/.cache/ms-playwright/chromium-*/chrome-linux64/chrome \
+          "$HOME"/.cache/ms-playwright/chromium-*/chrome-mac*/Chromium.app/Contents/MacOS/Chromium \
+       2>/dev/null | sort -V | tail -1
+)
+
+if [ -z "$bundled" ]; then
+    echo "mcp-chrome-devtools: no Chrome, and no Playwright Chromium under" >&2
+    echo "  $HOME/.cache/ms-playwright/. Install one:" >&2
+    echo "    npx playwright install chromium" >&2
+    exit 1
+fi
+
+# Headless unless there is genuinely a display to draw on. Headed Chrome on a
+# display-less host fails in a way that looks like the launch problem above.
+if [ -z "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ]; then
+    set -- --headless "$@"
+fi
+
+# --chromeArg=--no-sandbox is load-bearing on the Linux hosts. Without it this
+# Chrome-for-Testing build exits during startup and the server reports
+#     Protocol error (Target.setDiscoverTargets): Target closed
+# which reads as an unrelated crash rather than as a sandbox problem. Playwright
+# passes equivalent flags itself, which is why only this server shows it.
+exec npx -y chrome-devtools-mcp@latest \
+    --executablePath "$bundled" \
+    --isolated \
+    --chromeArg=--no-sandbox \
+    "$@"
