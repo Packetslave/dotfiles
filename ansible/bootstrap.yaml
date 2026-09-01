@@ -504,5 +504,5 @@
     - name: Write the bootstrap completion stamp
       ansible.builtin.copy:
         dest: "{{ ansible_facts.env.HOME }}/.local/state/bootstrap-last-run"
-        content: "{{ ansible_date_time.epoch }}\n"
+        content: "{{ ansible_facts.date_time.epoch }}\n"
         mode: "0644"
