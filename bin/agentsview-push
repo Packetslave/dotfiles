@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+# Push this laptop's agent session transcripts to the mfa1 archive.
+#
+# mfa1 PULLS the always-on hosts (homelab roles/agentsview) but cannot reach
+# the laptops -- impulse refuses port 22, johnny5 is often off -- so they push
+# into the same ~/data/claude-sessions/<host>/<agent>/ tree instead. Same
+# mechanism, opposite direction. See cowork
+# Decisions/decision-agentsview-fleet-collection-2026-08-30.md.
+#
+# Run by launchd (com.packetslave.agentsview-push, every 15 minutes).
+
+set -uo pipefail
+
+collector=mfa1
+archive=data/claude-sessions # relative to $HOME on the collector
+host=$(hostname -s | tr '[:upper:]' '[:lower:]')
+
+# One writer per destination tree: mfa1 already pulls the always-on hosts
+# into theirs, so this script must only ever run on a laptop.
+case $host in
+impulse | johnny5) ;;
+*)
+  echo "refusing to run on $host: not a push host (mfa1 pulls it)" >&2
+  exit 1
+  ;;
+esac
+
+# Homebrew rsync, not /usr/bin/rsync: macOS ships openrsync, which lacks
+# --delay-updates.
+rsync=/opt/homebrew/bin/rsync
+# accept-new: a fresh laptop may not know mfa1's host key yet, and BatchMode
+# would otherwise fail the first run with no way to answer the prompt.
+ssh_cmd='ssh -o BatchMode=yes -o ConnectTimeout=15 -o StrictHostKeyChecking=accept-new'
+
+failed=0
+
+push() {
+  local agent=$1 src=$2
+  local dest="$archive/$host/$agent"
+  local rc
+
+  # johnny5 may not have every tree (e.g. no Cowork use) -- not an error.
+  if [ ! -d "$src" ]; then
+    printf 'skip    %s/%s (no %s)\n' "$host" "$agent" "$src"
+    return
+  fi
+
+  $ssh_cmd "$collector" mkdir -p "$dest" || {
+    printf 'FAILED  %s/%s (cannot reach %s)\n' "$host" "$agent" "$collector" >&2
+    failed=$((failed + 1))
+    return
+  }
+
+  # --delay-updates: agents append to a transcript continuously DURING a
+  #   session, so a plain copy exposes half-written files at the destination.
+  # NO --delete, ever. This tree is an archive: the laptop prunes its own
+  #   history, and mirroring the prune would destroy exactly what the archive
+  #   exists to preserve.
+  "$rsync" -a --delay-updates --timeout=300 \
+    -e "$ssh_cmd" \
+    "$src" "$collector:$dest/"
+  rc=$?
+
+  if [ "$rc" -eq 0 ]; then
+    printf 'ok      %s/%s\n' "$host" "$agent"
+  else
+    printf 'FAILED  %s/%s (rsync exit %s)\n' "$host" "$agent" "$rc" >&2
+    failed=$((failed + 1))
+  fi
+}
+
+push claude "$HOME/.claude/projects/"
+push cowork "$HOME/Library/Application Support/Claude/local-agent-mode-sessions/"
+
+if [ "$failed" -gt 0 ]; then
+  printf '%s push(es) failed\n' "$failed" >&2
+  exit 1
+fi

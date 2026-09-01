@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Managed by ansible (macos.yaml). Do not edit on the host. -->
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>com.packetslave.agentsview-push</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>{{ ansible_facts.env.HOME }}/dotfiles/bin/agentsview-push</string>
+	</array>
+	<!-- StartInterval, not WatchPaths: agents append to transcripts
+	     continuously during a session, so path-watching would fire constantly
+	     and mostly copy half-written files. -->
+	<key>StartInterval</key>
+	<integer>900</integer>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>StandardOutPath</key>
+	<string>{{ ansible_facts.env.HOME }}/Library/Logs/agentsview-push.log</string>
+	<key>StandardErrorPath</key>
+	<string>{{ ansible_facts.env.HOME }}/Library/Logs/agentsview-push.log</string>
+</dict>
+</plist>
