@@ -319,6 +319,22 @@
              | select('match', '^[0-9]+')
              | map('split') | map('first') | list }}
       when: (item.id | string) not in installed_ids
+      register: mas_results
+      ignore_errors: true
+
+    # Mirrors the casks rescue above, for the same reason: a paid app whose
+    # purchase or payment state is broken is not something ansible can
+    # converge. Without this the first such app fails the whole run, which
+    # takes the "Record bootstrap completion" play in bootstrap.yaml with it
+    # -- so the machine never gets a stamp and `Bootstrap stamp missing`
+    # fires forever. Seen on studio 2026-09-01. A bare loop also stops at the
+    # FIRST failing item, so one unpurchased app skipped the other five.
+    - name: Report App Store apps that failed to install
+      ansible.builtin.debug:
+        msg: >-
+          App Store apps that failed to install:
+          {{ mas_results.results | selectattr('failed', 'defined')
+             | selectattr('failed') | map(attribute='item.name') | list }}
 
     # Touch ID for sudo, update-proof (sudo_local survives macOS updates);
     # pam_reattach makes it work inside tmux/screen, ignore_ssh keeps SSH
