@@ -290,6 +290,18 @@
               {{ cask_results.results | selectattr('failed', 'defined')
                  | selectattr('failed') | map(attribute='item') | list }}
 
+    # ATTENDED, opt-in only: all three tasks below carry
+    # `tags: [attended, never]`, so a plain `ap` skips them and
+    # `ap --tags attended` runs them deliberately, at the machine. mas pops
+    # a GUI dialog from Apple when a purchase needs attention (expired card,
+    # "Verify billing info") and blocks until somebody dismisses it on the
+    # console -- which stalled an unattended run on studio indefinitely,
+    # 2026-09-01. ignore_errors cannot help a task that never returns; the
+    # only real fix is not to run it unattended. The tag must go on all
+    # three together: mas_list feeds installed_ids and mas_results feeds the
+    # report, so tagging only some leaves the others undefined on a run that
+    # does select the tag.
+    #
     # Requires being signed in to the App Store (mac-setup.sh gates on that
     # during the 1Password-for-Safari install). Drives the mas CLI directly:
     # the community.general.mas module int()-parses `mas list` output and
@@ -299,6 +311,7 @@
         cmd: /opt/homebrew/bin/mas list
       register: mas_list
       changed_when: false
+      tags: [attended, never]
 
     # become: mas 2.x invokes sudo internally to install, and in a
     # non-interactive run that inner sudo has no terminal to prompt on —
@@ -321,6 +334,7 @@
       when: (item.id | string) not in installed_ids
       register: mas_results
       ignore_errors: true
+      tags: [attended, never]
 
     # Mirrors the casks rescue above, for the same reason: a paid app whose
     # purchase or payment state is broken is not something ansible can
@@ -335,6 +349,7 @@
           App Store apps that failed to install:
           {{ mas_results.results | selectattr('failed', 'defined')
              | selectattr('failed') | map(attribute='item.name') | list }}
+      tags: [attended, never]
 
     # Touch ID for sudo, update-proof (sudo_local survives macOS updates);
     # pam_reattach makes it work inside tmux/screen, ignore_ssh keeps SSH
