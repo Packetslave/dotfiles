@@ -427,8 +427,10 @@ if [[ -d "$COWORK_DIR/.git" ]]; then
     else
         git clone https://github.com/Packetslave/claude-obsidian "$EXTERNAL_DIR/claude-obsidian"
     fi
+    # instapaper-mcp — our fork of hendronf/Instapaper-MCP; it carries the
+    # content_file parameter on add_private_bookmark (cowork-wfl4, 2026-09-05).
     if [[ ! -d "$EXTERNAL_DIR/instapaper-mcp" ]]; then
-        git clone https://github.com/hendronf/Instapaper-MCP "$EXTERNAL_DIR/instapaper-mcp"
+        git clone https://github.com/Packetslave/Instapaper-MCP "$EXTERNAL_DIR/instapaper-mcp"
     fi
     # Guard on node_modules, not on the compiled entrypoint: instapaper-mcp
     # commits build/ upstream, so build/index.js exists the moment you clone and
