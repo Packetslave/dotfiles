@@ -149,33 +149,39 @@ done
 # 6. 1Password sign-in gate
 # ---------------------------------------------------------------------------
 # The GitHub login later in this script needs the passkey stored in
-# 1Password, so don't continue until it's signed in and unlocked.
+# 1Password, so don't continue until it's signed in and unlocked. The whole
+# gate exists only to serve that login — once gh is authenticated, a re-run
+# has nothing to gain from it, so skip the app-opening and Enter prompts.
 step "1Password setup"
-info "Sign in to 1Password and unlock your vault before continuing."
-open -a "1Password"
-read -r -p "    Press Enter once 1Password is signed in and unlocked... "
-
-# 1Password for Safari (Mac App Store app) — this is what surfaces the
-# GitHub passkey prompt during the login later.
-SAFARI_1P_ID=1569813296
-if mas list | grep -q "^${SAFARI_1P_ID} "; then
-    info "1Password for Safari already installed."
+if gh auth status >/dev/null 2>&1; then
+    info "GitHub already authenticated — skipping the 1Password sign-in gate."
 else
-    info "Installing 1Password for Safari from the App Store..."
-    until mas install "$SAFARI_1P_ID"; do
-        info "Install failed — this usually means you're not signed in to the App Store."
-        open -a "App Store"
-        read -r -p "    Sign in via the App Store window, then press Enter to retry... "
-    done
-fi
+    info "Sign in to 1Password and unlock your vault before continuing."
+    open -a "1Password"
+    read -r -p "    Press Enter once 1Password is signed in and unlocked... "
 
-# Enabling the extension is GUI-only — Apple doesn't allow scripting it.
-info "In the Safari window that opens: Settings (cmd-,) -> Extensions ->"
-info "enable '1Password for Safari' and allow it on every website."
-info "Also recommended: System Settings -> General -> AutoFill & Passwords ->"
-info "turn on 1Password, so Safari's passkey sheet can offer it."
-open -a Safari
-read -r -p "    Press Enter once the Safari extension is enabled and unlocked... "
+    # 1Password for Safari (Mac App Store app) — this is what surfaces the
+    # GitHub passkey prompt during the login later.
+    SAFARI_1P_ID=1569813296
+    if mas list | grep -q "^${SAFARI_1P_ID} "; then
+        info "1Password for Safari already installed."
+    else
+        info "Installing 1Password for Safari from the App Store..."
+        until mas install "$SAFARI_1P_ID"; do
+            info "Install failed — this usually means you're not signed in to the App Store."
+            open -a "App Store"
+            read -r -p "    Sign in via the App Store window, then press Enter to retry... "
+        done
+    fi
+
+    # Enabling the extension is GUI-only — Apple doesn't allow scripting it.
+    info "In the Safari window that opens: Settings (cmd-,) -> Extensions ->"
+    info "enable '1Password for Safari' and allow it on every website."
+    info "Also recommended: System Settings -> General -> AutoFill & Passwords ->"
+    info "turn on 1Password, so Safari's passkey sheet can offer it."
+    open -a Safari
+    read -r -p "    Press Enter once the Safari extension is enabled and unlocked... "
+fi
 
 # ---------------------------------------------------------------------------
 # 7. Tailscale: sign in and join the tailnet
@@ -410,7 +416,15 @@ CLAUDE_SETTINGS="$HOME/.claude/settings.json"
 jq --arg cmd "$HOME/.claude/statusline.sh" \
     '{model: "claude-fable-5[1m]", theme: "dark", tui: "fullscreen"} + .
      + {statusLine: {type: "command", command: $cmd}}' \
-    "$CLAUDE_SETTINGS" > "$CLAUDE_SETTINGS.tmp" && mv -f "$CLAUDE_SETTINGS.tmp" "$CLAUDE_SETTINGS"
+    "$CLAUDE_SETTINGS" > "$CLAUDE_SETTINGS.tmp"
+# Only replace the file when the merge actually changed something — Claude Code
+# also writes settings.json, so a no-op rewrite is a pointless race with it.
+if cmp -s "$CLAUDE_SETTINGS.tmp" "$CLAUDE_SETTINGS"; then
+    rm -f "$CLAUDE_SETTINGS.tmp"
+    info "settings.json already converged."
+else
+    mv -f "$CLAUDE_SETTINGS.tmp" "$CLAUDE_SETTINGS"
+fi
 
 # ---------------------------------------------------------------------------
 # 15. Cowork external checkouts (src/_external/)
@@ -554,7 +568,15 @@ if [[ -d "$COWORK_DIR/.git" ]]; then
                 PRIVATE_JOURNAL_PATH: $jpath,
                 PATH: "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin"
             }
-        }' "$CLAUDE_JSON" > "$CLAUDE_JSON.tmp" && mv -f "$CLAUDE_JSON.tmp" "$CLAUDE_JSON"
+        }' "$CLAUDE_JSON" > "$CLAUDE_JSON.tmp"
+    # Same guard as settings.json above: ~/.claude.json is live Claude Code
+    # state, so don't rewrite it when the registration is already in place.
+    if cmp -s "$CLAUDE_JSON.tmp" "$CLAUDE_JSON"; then
+        rm -f "$CLAUDE_JSON.tmp"
+        info "private-journal already registered in ~/.claude.json."
+    else
+        mv -f "$CLAUDE_JSON.tmp" "$CLAUDE_JSON"
+    fi
 
     # Own nested repos under src/ (independent git repos, gitignored by cowork)
     for repo in experiments matrix; do
