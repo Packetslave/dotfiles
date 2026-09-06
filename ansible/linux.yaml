@@ -38,3 +38,24 @@
       ansible.builtin.command:
         cmd: loginctl enable-linger {{ ansible_facts['user_id'] }}
       when: (linger_state.stdout | trim) != 'Linger=yes'
+
+    # QEMU reaches hardware virtualization through /dev/kvm, which is
+    # root:kvm 0660 — so without membership it silently falls back to TCG
+    # emulation instead of failing. That is the worst outcome available: the
+    # chassis deploy-rehearsal VMs (chassis ADR 0002, amended 2026-09-06 to run
+    # on Linux) come up, work, and are slow enough that nobody runs them.
+    # Gated on /dev/kvm because the group only exists where KVM does, and this
+    # playbook also runs on hosts without it (a DigitalOcean droplet, a VM).
+    # Takes effect at the user's next login, not immediately.
+    - name: Check whether this host has KVM
+      ansible.builtin.stat:
+        path: /dev/kvm
+      register: dev_kvm
+
+    - name: Add the login user to the kvm group so QEMU is accelerated
+      become: true
+      ansible.builtin.user:
+        name: "{{ ansible_facts['user_id'] }}"
+        groups: kvm
+        append: true
+      when: dev_kvm.stat.exists

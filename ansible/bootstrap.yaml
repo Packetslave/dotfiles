@@ -46,6 +46,10 @@
         # than from a client installed on the app box. Keg-only — zsh/zshenv
         # puts its bin on PATH.
       - librsvg # rsvg-convert, the SVG->PNG/PDF render path
+      - lima # chassis deploy rehearsal VMs (make rehearse-up). Cross-platform
+        # since the tier gained a Linux shape (chassis ADR 0002, amended
+        # 2026-09-06): on Linux it pulls qemu and needs the kvm group,
+        # which linux.yaml adds.
       - mosh
       - mtr # the `p8` alias in zsh/zshrc
       - neovim
