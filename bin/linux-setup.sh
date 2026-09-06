@@ -408,6 +408,18 @@ if [[ -d "$COWORK_DIR/.git" ]]; then
         info "gmail-duckdb checkout already present."
     fi
 
+    # ofdump: OUR code, so src/ofdump rather than _external/ — its own repo for
+    # the same reason as gmail-duckdb (cowork gitignores src/ outright). Only
+    # Macs with OmniFocus can run it (osascript + evaluate javascript), but
+    # every machine clones it so the code is never one disk away from being
+    # lost. No build step: a single self-executable uv script.
+    OFDUMP_DIR="$COWORK_DIR/src/ofdump"
+    if [[ ! -d "$OFDUMP_DIR" ]]; then
+        git clone "${ORIGIN_USER}@${ORIGIN_HOST}:git/ofdump.git" "$OFDUMP_DIR"
+    else
+        info "ofdump checkout already present."
+    fi
+
     # omnifocus-cli is macOS-only (OmniFocus.app + JXA); nothing to do here.
     info "omnifocus-cli skipped (macOS only)."
     # ContainerTools drives Apple's `container`, which does not exist off macOS.

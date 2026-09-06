@@ -491,6 +491,18 @@ if [[ -d "$COWORK_DIR/.git" ]]; then
     else
         info "gmail-duckdb checkout already present."
     fi
+    # ofdump: OUR code, so src/ofdump rather than _external/ — its own repo for
+    # the same reason as gmail-duckdb (cowork gitignores src/ outright). No
+    # build step: a single self-executable uv script. Exports the entire
+    # OmniFocus database (osascript + evaluate javascript) into cowork's
+    # output/omnifocus/ (bead cowork-pb17, 2026-09-05).
+    OFDUMP_DIR="$COWORK_DIR/src/ofdump"
+    if [[ ! -d "$OFDUMP_DIR" ]]; then
+        git clone "${ORIGIN_USER}@${ORIGIN_HOST}:git/ofdump.git" "$OFDUMP_DIR"
+    else
+        info "ofdump checkout already present."
+    fi
+
     if [[ ! -d "$EXTERNAL_DIR/omnifocus-cli" ]]; then
         git clone git@github.com:Packetslave/omnifocus-cli.git "$EXTERNAL_DIR/omnifocus-cli"
     fi
