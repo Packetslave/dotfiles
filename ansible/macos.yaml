@@ -54,7 +54,6 @@
       - k9s
       - kubetail
       - lazydocker
-      - lima # chassis deploy rehearsal VMs (make rehearse-up)
       - llama.cpp
       - mactop
       - marp-cli
