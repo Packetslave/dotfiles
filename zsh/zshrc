@@ -366,7 +366,41 @@ export DRONE_SERVER=https://drone.build.ue1.snooguts.net
 export SRC_ENDPOINT=https://reddit.sourcegraphcloud.com
 export SOPS_AGE_KEY_FILE="$HOME/.config/sops/age/keys.txt"
 
+# Refuse to launch Claude into a stale checkout. A session that starts days
+# behind origin re-derives already-landed work and pushes conflicts — the
+# 2026-09-12 mem0 session found the homelab checkout 73 commits behind and had
+# to resolve a rebase conflict mid-handoff. The fetch is bounded (5s connect,
+# BatchMode) so a dead network degrades to a warning instead of a hang;
+# genuine staleness fails the launch. Deliberate offline work:
+#   CLAUDE_STALE_OK=1 claude
+_claude_stale_check() {
+  local limit=5 failed=0
+  local -a repos
+  repos=(
+    "$HOME/src/cowork:main"
+    "$HOME/dotfiles:master"
+    "$HOME/src/cowork/src/homelab:main"
+  )
+  local entry dir branch behind
+  for entry in "${repos[@]}"; do
+    dir="${entry%:*}" branch="${entry##*:}"
+    [[ -d "$dir/.git" ]] || continue
+    if ! GIT_SSH_COMMAND="ssh -o ConnectTimeout=5 -o BatchMode=yes" \
+         git -C "$dir" fetch -q origin "$branch" 2>/dev/null; then
+      >&2 echo "claude: $dir: fetch failed (offline?) — skipping staleness check"
+      continue
+    fi
+    behind="$(git -C "$dir" rev-list --count "HEAD..origin/$branch" 2>/dev/null)" || continue
+    if (( behind > limit )); then
+      >&2 echo "claude: $dir is $behind commits behind origin/$branch (limit $limit) — pull first, or CLAUDE_STALE_OK=1 to override"
+      failed=1
+    fi
+  done
+  return $failed
+}
+
 claude() {
+  [[ -n "$CLAUDE_STALE_OK" ]] || _claude_stale_check || return 1
   # One sops decrypt = one Touch ID prompt; MCP servers inherit the env
   # (regen the file with secrets/build-claude-startup.sh after editing secrets)
   # sops locates age-plugin-se via $PATH, so pin homebrew for non-interactive SSH
