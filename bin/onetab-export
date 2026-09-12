@@ -1,0 +1,281 @@
+#!/usr/bin/env -S uv run --script --quiet
+# /// script
+# requires-python = ">=3.10"
+# dependencies = [
+#     "ccl-chromium-reader @ git+https://github.com/cclgroupltd/ccl_chromium_reader",
+# ]
+# ///
+#
+# Export saved tabs from the OneTab Chrome extension, per Chrome profile.
+#
+# OneTab (https://www.one-tab.com) stores its saved tab groups in the
+# extension's IndexedDB, which Chrome keeps on disk as a LevelDB database.
+# This reads that database directly (via ccl-chromium-reader), so it works
+# without opening the browser and without OneTab's manual export.
+#
+# The database directory is copied to a temp dir before reading, so it is
+# safe to run while Chrome is open.
+#
+# usage:
+#   onetab-export --list                 # show profiles that have OneTab data
+#   onetab-export                        # all profiles, JSON to stdout
+#   onetab-export --profile Default -o tabs.json
+#   onetab-export --format md -o tabs.md
+#   onetab-export --format txt           # OneTab's own "url | title" format
+#   onetab-export --format html          # Netscape bookmarks file
+#
+# Brian Landers <brian@packetslave.com>
+
+import argparse
+import datetime
+import html
+import json
+import shutil
+import sys
+import tempfile
+from pathlib import Path
+
+from ccl_chromium_reader import ccl_chromium_indexeddb
+
+ONETAB_ID = "chphlpgkkbolifaimnlloiipkdnihall"
+
+CHROME_DATA_DIRS = [
+    ("Chrome", Path.home() / "Library/Application Support/Google/Chrome"),
+    ("Chrome Beta", Path.home() / "Library/Application Support/Google/Chrome Beta"),
+    ("Chrome Canary", Path.home() / "Library/Application Support/Google/Chrome Canary"),
+    ("Chromium", Path.home() / "Library/Application Support/Chromium"),
+]
+
+
+def profile_display_names(data_dir: Path) -> dict[str, str]:
+    """Map profile dir name -> human-readable name, from Chrome's Local State."""
+    try:
+        state = json.loads((data_dir / "Local State").read_text())
+        cache = state["profile"]["info_cache"]
+        return {k: v.get("name", k) for k, v in cache.items()}
+    except (OSError, KeyError, json.JSONDecodeError):
+        return {}
+
+
+def find_onetab_dbs():
+    """Yield (browser, profile_dir_name, display_name, idb_path, blob_path|None)."""
+    for browser, data_dir in CHROME_DATA_DIRS:
+        if not data_dir.is_dir():
+            continue
+        names = profile_display_names(data_dir)
+        for profile_dir in sorted(data_dir.iterdir()):
+            idb = (
+                profile_dir
+                / "IndexedDB"
+                / f"chrome-extension_{ONETAB_ID}_0.indexeddb.leveldb"
+            )
+            if idb.is_dir():
+                blob = idb.with_suffix(".blob")
+                yield (
+                    browser,
+                    profile_dir.name,
+                    names.get(profile_dir.name, profile_dir.name),
+                    idb,
+                    blob if blob.is_dir() else None,
+                )
+
+
+def read_records(idb_path: Path, blob_path: Path | None) -> list[dict]:
+    """Copy the LevelDB aside and return every dict-valued IndexedDB record."""
+    records = []
+    with tempfile.TemporaryDirectory(prefix="onetab-export-") as tmp:
+        tmp_idb = Path(tmp) / idb_path.name
+        shutil.copytree(idb_path, tmp_idb)
+        (tmp_idb / "LOCK").unlink(missing_ok=True)
+        tmp_blob = None
+        if blob_path is not None:
+            tmp_blob = Path(tmp) / blob_path.name
+            shutil.copytree(blob_path, tmp_blob)
+
+        wrapper = ccl_chromium_indexeddb.WrappedIndexDB(tmp_idb, tmp_blob)
+        for db_info in wrapper.database_ids:
+            db = wrapper[db_info.dbid_no]
+            for store_name in db.object_store_names:
+                for record in db[store_name].iterate_records():
+                    if isinstance(record.value, dict):
+                        records.append(record.value)
+    return records
+
+
+def as_str(v) -> str:
+    """ccl's V8 deserializer sometimes yields bytes for one-byte strings.
+
+    V8 one-byte strings are Latin-1, but a plain-ASCII payload that was
+    stored as UTF-8 decodes identically either way, so try UTF-8 first.
+    """
+    if isinstance(v, bytes):
+        try:
+            return v.decode("utf-8")
+        except UnicodeDecodeError:
+            return v.decode("latin-1")
+    return str(v)
+
+
+def ms_to_iso(ms) -> str | None:
+    try:
+        return (
+            datetime.datetime.fromtimestamp(ms / 1000, tz=datetime.timezone.utc)
+            .astimezone()
+            .isoformat(timespec="seconds")
+        )
+    except (TypeError, ValueError, OSError, OverflowError):
+        return None
+
+
+def reconstruct_groups(records: list[dict]) -> list[dict]:
+    """Rebuild OneTab's group/tab structure from raw IndexedDB records.
+
+    Tabs carry a url; groups carry childIds pointing at tabs; a root record
+    carries childIds pointing at the groups (in display order).
+    """
+    by_id = {r["id"]: r for r in records if isinstance(r.get("id"), str)}
+    tabs = {i for i, r in by_id.items() if r.get("url")}
+    containers = {i for i, r in by_id.items() if isinstance(r.get("childIds"), list)}
+
+    group_ids = {i for i in containers if any(c in tabs for c in by_id[i]["childIds"])}
+    roots = [i for i in containers - group_ids
+             if any(c in containers for c in by_id[i]["childIds"])]
+
+    ordered = []
+    if roots:
+        for root in roots:
+            ordered.extend(c for c in by_id[root]["childIds"] if c in containers)
+        ordered.extend(g for g in group_ids if g not in ordered)
+    else:
+        ordered = sorted(group_ids, key=lambda g: by_id[g].get("createDate") or 0,
+                         reverse=True)
+
+    groups = []
+    claimed = set()
+    for gid in ordered:
+        g = by_id[gid]
+        group_tabs = []
+        for tid in g["childIds"]:
+            t = by_id.get(tid)
+            if t and t.get("url"):
+                claimed.add(tid)
+                group_tabs.append({"title": as_str(t.get("title") or t["url"]),
+                                   "url": as_str(t["url"]),
+                                   "created": ms_to_iso(t.get("createDate"))})
+        groups.append({"label": as_str(g["label"]) if g.get("label") else None,
+                       "created": ms_to_iso(g.get("createDate")),
+                       "starred": bool(g.get("starred")),
+                       "tabs": group_tabs})
+
+    orphans = [by_id[t] for t in tabs - claimed]
+    if orphans:
+        groups.append({"label": "(ungrouped)", "created": None, "starred": False,
+                       "tabs": [{"title": as_str(t.get("title") or t["url"]),
+                                 "url": as_str(t["url"]),
+                                 "created": ms_to_iso(t.get("createDate"))}
+                                for t in orphans]})
+    return groups
+
+
+def fmt_json(profiles: list[dict]) -> str:
+    return json.dumps(profiles, indent=2, ensure_ascii=False) + "\n"
+
+
+def fmt_txt(profiles: list[dict]) -> str:
+    """OneTab's own export format: 'url | title' lines, blank line between groups."""
+    out = []
+    for p in profiles:
+        for g in p["groups"]:
+            for t in g["tabs"]:
+                out.append(f"{t['url']} | {t['title']}")
+            out.append("")
+    return "\n".join(out)
+
+
+def fmt_md(profiles: list[dict]) -> str:
+    out = []
+    for p in profiles:
+        out.append(f"# {p['browser']} — {p['profile_name']} ({p['profile_dir']})\n")
+        for g in p["groups"]:
+            label = g["label"] or "Untitled group"
+            when = f" — {g['created']}" if g["created"] else ""
+            out.append(f"## {label}{when}\n")
+            for t in g["tabs"]:
+                out.append(f"- [{t['title']}]({t['url']})")
+            out.append("")
+    return "\n".join(out) + "\n"
+
+
+def fmt_html(profiles: list[dict]) -> str:
+    out = ['<!DOCTYPE NETSCAPE-Bookmark-file-1>',
+           '<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">',
+           "<TITLE>OneTab export</TITLE>", "<H1>OneTab export</H1>", "<DL><p>"]
+    for p in profiles:
+        out.append(f"  <DT><H3>{html.escape(p['profile_name'])}</H3>")
+        out.append("  <DL><p>")
+        for g in p["groups"]:
+            label = g["label"] or (g["created"] or "Untitled group")
+            out.append(f"    <DT><H3>{html.escape(label)}</H3>")
+            out.append("    <DL><p>")
+            for t in g["tabs"]:
+                out.append(f'      <DT><A HREF="{html.escape(t["url"], quote=True)}">'
+                           f'{html.escape(t["title"])}</A>')
+            out.append("    </DL><p>")
+        out.append("  </DL><p>")
+    out.append("</DL><p>")
+    return "\n".join(out) + "\n"
+
+
+FORMATTERS = {"json": fmt_json, "txt": fmt_txt, "md": fmt_md, "html": fmt_html}
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(
+        description="Export saved tabs from the OneTab Chrome extension")
+    ap.add_argument("--list", action="store_true",
+                    help="list profiles that have OneTab data, then exit")
+    ap.add_argument("--profile",
+                    help="only this profile (directory name like 'Profile 1', "
+                         "or the display name shown by --list)")
+    ap.add_argument("--format", choices=FORMATTERS, default="json")
+    ap.add_argument("-o", "--output", help="output file (stdout if omitted)")
+    args = ap.parse_args()
+
+    found = list(find_onetab_dbs())
+    if not found:
+        print("No OneTab IndexedDB data found in any Chrome profile.",
+              file=sys.stderr)
+        return 1
+
+    if args.list:
+        for browser, dirname, display, idb, _ in found:
+            print(f"{browser}: {dirname} ({display})  ->  {idb}")
+        return 0
+
+    if args.profile:
+        found = [f for f in found if args.profile in (f[1], f[2])]
+        if not found:
+            print(f"No OneTab data for profile {args.profile!r}. "
+                  "Run with --list to see profiles.", file=sys.stderr)
+            return 1
+
+    profiles = []
+    for browser, dirname, display, idb, blob in found:
+        groups = reconstruct_groups(read_records(idb, blob))
+        n_tabs = sum(len(g["tabs"]) for g in groups)
+        print(f"{browser} / {display}: {len(groups)} groups, {n_tabs} tabs",
+              file=sys.stderr)
+        profiles.append({"browser": browser, "profile_dir": dirname,
+                         "profile_name": display, "groups": groups})
+
+    text = FORMATTERS[args.format](profiles)
+    if args.output:
+        Path(args.output).write_text(text)
+        print(f"Wrote {args.output}", file=sys.stderr)
+    else:
+        sys.stdout.write(text)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
