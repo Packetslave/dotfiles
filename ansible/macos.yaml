@@ -78,6 +78,7 @@
       - superfile
       - tfenv
       - tmuxinator
+      - xcodegen
       - yt-dlp
     mas_apps:
       - { id: 1586435171, name: Actions }
