@@ -243,6 +243,23 @@
         dest: ~/.config/eza
         state: link
 
+    - name: check the current bin symlink
+      stat: path=~/bin
+      register: bin_available
+
+    - name: remove the bin folder (only if it is a folder)
+      file:
+        path: ~/bin
+        state: absent
+      when: bin_available.stat.isdir is defined and bin_available.stat.isdir
+
+    - name: Create links - bin dir
+      ansible.builtin.file:
+        src: ~/dotfiles/bin
+        dest: ~/bin
+        state: link
+        force: true
+
     # Whole-dir link, like eza: `ya pkg` writes plugins/ and package.toml
     # inside the config dir, so the repo has to be what yazi is looking at.
     # plugins/ itself is gitignored — see the "Install yazi plugins" task.
