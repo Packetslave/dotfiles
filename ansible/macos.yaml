@@ -543,6 +543,33 @@
         - ansible_hostname | lower == 'studio'
         - not (node_exporter_service_info.stdout | from_json | first).running
 
+    # studio is a tailnet subnet router for the house LAN prefixes, alongside
+    # mfa1 (homelab hosts.ini [subnet_routers], group_vars/subnet_routers.yml
+    # holds the same three prefixes; change both together). Two always-on
+    # routers replaced lunchbox as the sole router on 2026-09-13. studio is
+    # also an exit node, and `tailscale set --advertise-routes` REPLACES the
+    # whole set, so the exit-node prefixes are carried across rather than
+    # dropped. The Tailscale app handles forwarding itself on macOS.
+    # Approving the routes is a Tailscale admin console step.
+    - name: Read the Tailscale prefs (studio only)
+      ansible.builtin.command:
+        cmd: /Applications/Tailscale.app/Contents/MacOS/Tailscale debug prefs
+      register: tailscale_prefs_raw
+      changed_when: false
+      check_mode: false
+      when: ansible_hostname | lower == 'studio'
+
+    - name: Advertise the LAN subnet routes (studio only)
+      ansible.builtin.command:
+        cmd: "/Applications/Tailscale.app/Contents/MacOS/Tailscale set --advertise-routes={{ (_exit + _lan) | unique | sort | join(',') }}"
+      vars:
+        _prefs: "{{ tailscale_prefs_raw.stdout | from_json }}"
+        _exit: "{{ (_prefs.AdvertiseRoutes | default([], true)) | select('in', ['0.0.0.0/0', '::/0']) | list }}"
+        _lan: ['192.168.10.0/24', '192.168.64.0/24', '192.168.192.0/24']
+      when:
+        - ansible_hostname | lower == 'studio'
+        - ((_prefs.AdvertiseRoutes | default([], true)) | sort) != ((_exit + _lan) | unique | sort)
+
     # Trust the homelab root CA (capi5, "Tiny Root CA", expires 2035-10-25) in
     # the System keychain, so Safari, Chrome and /usr/bin/curl accept
     # certificates it issues for *.internal. The PEM is inline: it is public
