@@ -520,9 +520,10 @@ if [[ -d "$COWORK_DIR/.git" ]]; then
     if [[ ! -d "$EXTERNAL_DIR/omnifocus-cli" ]]; then
         git clone git@github.com:Packetslave/omnifocus-cli.git "$EXTERNAL_DIR/omnifocus-cli"
     fi
-    # Drop/undrop support (upstream PR #44) lives on this branch; a main-branch
-    # build silently lacks --drop (bit impulse, 2026-08-15).
-    OF_BRANCH="feature/task-drop-support"
+    # Drop/undrop support (upstream PR #44) plus parent/child task support live
+    # on this branch (stacked on feature/task-drop-support); a main-branch build
+    # silently lacks --drop (bit impulse, 2026-08-15).
+    OF_BRANCH="feature/task-hierarchy"
     if [[ "$(git -C "$EXTERNAL_DIR/omnifocus-cli" rev-parse --abbrev-ref HEAD)" != "$OF_BRANCH" ]]; then
         git -C "$EXTERNAL_DIR/omnifocus-cli" fetch origin "$OF_BRANCH"
         git -C "$EXTERNAL_DIR/omnifocus-cli" checkout "$OF_BRANCH"
