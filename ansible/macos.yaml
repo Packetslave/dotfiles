@@ -522,9 +522,12 @@
     # (capi5 serves it at /roots.pem) and a laptop away from home cannot fetch
     # it. Homebrew's curl, openssl and python read their own bundle and will
     # still refuse -- use /usr/bin/curl to check. Linux hosts get the same
-    # root from homelab's roles/ca_trust. Fingerprint pinned below; the
-    # keychain lookup is unprivileged, so sudo is only asked for on a
-    # machine that does not trust it yet.
+    # root from homelab's roles/ca_trust. The keychain lookup is unprivileged;
+    # the actual trust write is CONSOLE-ONLY -- macOS routes it through the
+    # Security Agent, which needs a window-server session, so it cannot be
+    # done over SSH even as root (add-trusted-cert and the authorizationdb
+    # workaround are both denied, cowork-kgyf.39). This play therefore detects
+    # and instructs rather than trying to write the trust setting itself.
     - name: Check whether the homelab root CA is in the System keychain
       ansible.builtin.command:
         cmd: security find-certificate -c "Tiny Root CA" -Z /Library/Keychains/System.keychain
@@ -553,10 +556,26 @@
       when: "'D6326572AEB1CF419F661EA80591CE14E65CBB5ABB60C33B1CA96301585130B7' not in homelab_root_ca_lookup.stdout"
       tags: [ca_trust]
 
-    - name: Trust the homelab root CA in the System keychain
-      become: true
-      ansible.builtin.command:
-        cmd: security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain /tmp/tiny-root-ca.crt
+    # Console-only: run this in Terminal on the Mac itself (or Screen
+    # Sharing), then re-run. Failing here is deliberate -- a silent warning
+    # in a long bootstrap scrollback gets missed, and bootstrap is
+    # re-runnable, so it resumes cleanly once the operator has done the step.
+    - name: Stop and tell the operator to trust the root at the console
+      ansible.builtin.fail:
+        msg: |
+          The homelab root CA is not trusted in this Mac's System keychain,
+          and it cannot be added over SSH: macOS routes the trust-settings
+          write through the Security Agent, which needs a console session.
+
+          Run this in a Terminal on THIS Mac's own screen, then re-run
+          bootstrap (or: ansible-playbook ansible/macos.yaml --tags ca_trust):
+
+            sudo security add-trusted-cert -d -r trustRoot \
+              -k /Library/Keychains/System.keychain /tmp/tiny-root-ca.crt
+
+          Verify with /usr/bin/curl (Homebrew's curl ignores the keychain):
+
+            /usr/bin/curl -s https://capi5.internal/health
       when: "'D6326572AEB1CF419F661EA80591CE14E65CBB5ABB60C33B1CA96301585130B7' not in homelab_root_ca_lookup.stdout"
       tags: [ca_trust]
 
