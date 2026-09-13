@@ -38,6 +38,22 @@ if [[ -n "$HOMEBREW_PREFIX" && -d "$HOMEBREW_PREFIX/opt/libpq/bin" ]] ; then
   path=("$HOMEBREW_PREFIX/opt/libpq/bin" $path)
 fi
 
+# Linuxbrew's openssl, curl and python3 read their own CA bundle
+# ($HOMEBREW_PREFIX/etc/[email protected]/cert.pem, the Mozilla set), never the system
+# trust store. On mfa1 -- the ansible controller, whose default curl/python3
+# ARE Linuxbrew's -- that means they reject the homelab root CA (capi5) even
+# though the system trusts it via homelab's roles/ca_trust, so a health check
+# against https://capi5.internal fails while /usr/bin equivalents succeed.
+# Point OpenSSL at the Debian system bundle, which already carries that root
+# plus every public CA, so both public and *.internal TLS verify. System tools
+# default here already, so this changes only the brew ones. macOS has no such
+# file (brew there uses its own Mozilla bundle; the keychain serves Safari,
+# Chrome and /usr/bin/curl), so the file guard skips it.
+if [[ -n "$HOMEBREW_PREFIX" && "$HOMEBREW_PREFIX" == *linuxbrew* && -r /etc/ssl/certs/ca-certificates.crt ]] ; then
+  export SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
+  export SSL_CERT_DIR=/etc/ssl/certs
+fi
+
 # bd (beads) resolves its workspace by walking up from the cwd. The projects
 # under ~/src/cowork/src -- chassis, homelab, gmail-duckdb, matrix -- are
 # separate git repos with no .beads of their own, so the walk stops at their
