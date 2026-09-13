@@ -516,6 +516,33 @@
         and not reddit_machine.stat.exists
       notify: Reload agentsview push agent
 
+    # studio is the always-on headless Mac, so it is the one Mac the homelab
+    # Prometheus pair scrapes (job="node", class="workstation" in homelab's
+    # prod.yaml). lunchbox and the laptops stay probes-only by decision
+    # (cowork spec cowork-l4ts, decision 4). The formula's brew service
+    # listens on :9100 on every interface, which is what the LAN scrape needs.
+    - name: Install node_exporter (studio only)
+      community.general.homebrew:
+        name: node_exporter
+        state: present
+        path: "{{ homebrew_prefix }}/bin"
+      when: ansible_hostname | lower == 'studio'
+
+    - name: Check whether node_exporter is running as a brew service (studio only)
+      ansible.builtin.command:
+        cmd: "{{ homebrew_prefix }}/bin/brew services info node_exporter --json"
+      register: node_exporter_service_info
+      changed_when: false
+      check_mode: false
+      when: ansible_hostname | lower == 'studio'
+
+    - name: Start node_exporter as a brew service (studio only)
+      ansible.builtin.command:
+        cmd: "{{ homebrew_prefix }}/bin/brew services start node_exporter"
+      when:
+        - ansible_hostname | lower == 'studio'
+        - not (node_exporter_service_info.stdout | from_json | first).running
+
     # Trust the homelab root CA (capi5, "Tiny Root CA", expires 2035-10-25) in
     # the System keychain, so Safari, Chrome and /usr/bin/curl accept
     # certificates it issues for *.internal. The PEM is inline: it is public
