@@ -1,0 +1,18 @@
+#!/bin/bash
+
+set -Eeuo pipefail
+
+file="${1-}"
+if [[ -z "${file}" ]] ; then
+  echo "usage: $0 filename"
+  exit 1
+fi
+
+if [ "$(launchctl managername 2>/dev/null)" = "Aqua" ]; then
+  open "$file"
+elif [ -t 1 ]; then
+  /opt/homebrew/bin/glow "$file"
+else
+  printf '%s\n' "$file"
+fi
+
