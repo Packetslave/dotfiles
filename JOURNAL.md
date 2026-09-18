@@ -1,5 +1,36 @@
 # Journal
 
+## 2026-09-17 — impulse: Tailscale drops after network switches (diagnosis only)
+
+Symptom: on impulse, every Wi-Fi/wired switch kills mosh sessions over
+Tailscale until Tailscale is toggled off and on. Not reproduced here (it
+would have dropped the live session); this is a diagnosis with a test.
+
+Prime suspect is not Tailscale alone. Private Internet Access is installed
+and its daemon plus `com.privateinternetaccess.vpn.splittunnel` system
+extension are running even with the VPN disconnected. PIA split tunnel is
+enabled with an *exclude* rule for `/Applications/Tailscale.app` and a bypass
+for `100.64.0.0/10`. Exclude mode pins an app's sockets to the physical
+interface, so a link change leaves magicsock talking on the dead one; a new
+socket (the toggle) gets re-steered. tailscale/tailscale#21263, opened
+2026-09-14 on the same macOS 26.6.2 + 1.102.x, has the same shape and its
+workaround was disabling a third-party network extension. VPN On Demand is
+also on (connect on Wi-Fi and Ethernet) and is tagged on the open Tahoe
+wake bug #17937.
+
+Test, in order: quit PIA fully and switch networks; if it still fails,
+capture with `tailscale debug daemon-logs` during the switch and check for
+a LinkChange line and whether `tailscale ping lunchbox` falls to DERP.
+
+Gotchas for next time:
+
+- The macsys extension keeps a 220-byte root-only `ipn.log` under
+  `/Library/Tailscale` and ships the rest to logtail; `log show` predicates
+  on process/subsystem/image path find nothing. Live stream is the only
+  local capture path.
+- Tailscale.app is 1.102.2 with its own update checks off; the cask is at
+  1.102.4. Neither 1.102.3 nor 1.102.4 lists a network-change fix.
+
 ## 2026-08-27 — caps lock: Control only on the built-in keyboard
 
 Caps lock has been Control-when-held, Escape-when-tapped on every keyboard.
