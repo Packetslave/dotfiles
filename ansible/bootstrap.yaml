@@ -23,7 +23,6 @@
       - atuin
       - awscli # the `aws` command; formula name does not match the command
       - bat
-      - beads
       - btop
       - caddy
       - cmark-gfm
