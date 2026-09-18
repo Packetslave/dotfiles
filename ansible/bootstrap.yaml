@@ -184,10 +184,36 @@
     # machines enrolled as sops recipients can decrypt it, so seaside (public
     # facing), bug, and mfa2/mfa3 no-op here without needing a hostname
     # allowlist that someone would have to remember to maintain.
+    #
+    # But a skip alone cannot tell "opted out" from "enrolled and broken": on
+    # 2026-08-30 impulse had no src/homelab checkout at all, every atuin task
+    # skipped, and the run reported complete success with the feature absent
+    # (PAC-174). The second signal is the sops age key: a machine that holds
+    # one was meant to be enrolled, so key present + secret absent is a
+    # misconfiguration and FAILS the run (Brian's call, 2026-09-18) rather
+    # than warning -- a warning is exactly what nobody read the first time.
     - name: Check for the atuin sync secret in the homelab repo
       ansible.builtin.stat:
         path: "{{ ansible_facts.env.HOME }}/src/cowork/src/homelab/secrets/atuin.enc.env"
       register: atuin_secret
+
+    - name: Check for this machine's sops age key (the enrolled-ness signal)
+      ansible.builtin.stat:
+        path: "{{ ansible_facts.env.HOME }}/.config/sops/age/keys.txt"
+      register: sops_key
+
+    - name: Fail when an enrolled machine is missing the atuin secret
+      when:
+        - sops_key.stat.exists
+        - not atuin_secret.stat.exists
+      ansible.builtin.fail:
+        msg: >-
+          This machine has a sops age key at ~/.config/sops/age/keys.txt but no
+          ~/src/cowork/src/homelab/secrets/atuin.enc.env -- the homelab checkout
+          is missing or stale, so atuin sync would silently not be configured.
+          Fix the checkout (git -C ~/src/cowork/src/homelab pull, or clone it
+          from blanders@seaside:git/homelab.git) and re-run. A machine that is
+          meant to stay out of atuin sync should hold no age key.
 
     # `atuin status` exits 1 when logged out, writes its message to STDERR, and
     # leaves stdout EMPTY -- so the gate below is the return code. Matching a
