@@ -270,6 +270,15 @@ if command -v claude >/dev/null 2>&1; then
     add_claude_plugin ChromeDevTools/chrome-devtools-mcp chrome-devtools-plugins chrome-devtools-mcp
     info "apple-notes skipped (macOS only)."
 
+    # User-scoped MCP servers (mirrors mac-setup.sh): Linear is the cowork issue
+    # tracker since the beads migration, 2026-09. Registering records the URL;
+    # the OAuth login is interactive -- run `/mcp` once in a Claude Code session.
+    if claude mcp list 2>/dev/null | grep -q '^linear-server:'; then
+        info "linear-server MCP already registered."
+    else
+        claude mcp add -s user --transport http linear-server https://mcp.linear.app/mcp
+    fi
+
     # settings.json: seed defaults on a fresh machine (existing values win — the
     # left side of jq's + loses to what's already in the file), then point
     # statusLine at the dotfiles-owned script (symlinked into ~/.claude by ansible)

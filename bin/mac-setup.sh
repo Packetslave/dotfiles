@@ -407,6 +407,16 @@ add_claude_plugin anthropics/claude-plugins-official claude-plugins-official git
 add_claude_plugin sweetrb/apple-notes-mcp apple-notes-mcp apple-notes
 add_claude_plugin ChromeDevTools/chrome-devtools-mcp chrome-devtools-plugins chrome-devtools-mcp
 
+# User-scoped MCP servers. Linear (the cowork issue tracker since the beads
+# migration, 2026-09) is a hosted HTTP server: registering it only records the
+# URL -- the OAuth login is interactive, so on a new machine run `/mcp` inside a
+# Claude Code session once and pick linear-server.
+if claude mcp list 2>/dev/null | grep -q '^linear-server:'; then
+    info "linear-server MCP already registered."
+else
+    claude mcp add -s user --transport http linear-server https://mcp.linear.app/mcp
+fi
+
 # settings.json: seed defaults on a fresh machine (existing values win — the
 # left side of jq's + loses to what's already in the file), then point
 # statusLine at the dotfiles-owned script (symlinked into ~/.claude by ansible)
