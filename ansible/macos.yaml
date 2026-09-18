@@ -516,32 +516,54 @@
         and not reddit_machine.stat.exists
       notify: Reload agentsview push agent
 
-    # studio is the always-on headless Mac, so it is the one Mac the homelab
-    # Prometheus pair scrapes (job="node", class="workstation" in homelab's
-    # prod.yaml). lunchbox and the laptops stay probes-only by decision
-    # (cowork spec cowork-l4ts, decision 4). The formula's brew service
-    # listens on :9100 on every interface, which is what the LAN scrape needs.
-    - name: Install node_exporter (studio only)
+    # studio and lunchbox are the two always-on Macs, so they are the Macs the
+    # homelab Prometheus pair scrapes (job="node", class="workstation" in
+    # homelab's prod.yaml). The laptops stay probes-only (cowork spec
+    # cowork-l4ts / PAC-177, decision 4 -- amended 2026-09-18 to add lunchbox,
+    # which does not sleep and hosts the mlx-lm server). The formula's brew
+    # service listens on :9100 on every interface, which is what the LAN
+    # scrape needs.
+    - name: Install node_exporter (studio and lunchbox)
       community.general.homebrew:
         name: node_exporter
         state: present
         path: "{{ homebrew_prefix }}/bin"
-      when: ansible_hostname | lower == 'studio'
+      when: ansible_hostname | lower in ['studio', 'lunchbox']
 
-    - name: Check whether node_exporter is running as a brew service (studio only)
+    - name: Check whether node_exporter is running as a brew service (studio and lunchbox)
       ansible.builtin.command:
         cmd: "{{ homebrew_prefix }}/bin/brew services info node_exporter --json"
       register: node_exporter_service_info
       changed_when: false
       check_mode: false
-      when: ansible_hostname | lower == 'studio'
+      when: ansible_hostname | lower in ['studio', 'lunchbox']
 
-    - name: Start node_exporter as a brew service (studio only)
+    - name: Start node_exporter as a brew service (studio and lunchbox)
       ansible.builtin.command:
         cmd: "{{ homebrew_prefix }}/bin/brew services start node_exporter"
       when:
-        - ansible_hostname | lower == 'studio'
+        - ansible_hostname | lower in ['studio', 'lunchbox']
         - not (node_exporter_service_info.stdout | from_json | first).running
+
+    # mactop (in homebrew_formulae above) covers what a darwin node_exporter
+    # cannot: GPU/ANE utilisation, per-component watts, die temperatures. Its
+    # formula ships a brew service that runs it headless with a Prometheus
+    # endpoint on :9101, scraped as job="mactop" by homelab's prod.yaml.
+    # lunchbox only -- it is the Mac that serves models.
+    - name: Check whether mactop is running as a brew service (lunchbox only)
+      ansible.builtin.command:
+        cmd: "{{ homebrew_prefix }}/bin/brew services info mactop --json"
+      register: mactop_service_info
+      changed_when: false
+      check_mode: false
+      when: ansible_hostname | lower == 'lunchbox'
+
+    - name: Start mactop as a brew service (lunchbox only)
+      ansible.builtin.command:
+        cmd: "{{ homebrew_prefix }}/bin/brew services start mactop"
+      when:
+        - ansible_hostname | lower == 'lunchbox'
+        - not (mactop_service_info.stdout | from_json | first).running
 
     # studio is a tailnet subnet router for the house LAN prefixes, alongside
     # mfa1 (homelab hosts.ini [subnet_routers], group_vars/subnet_routers.yml
