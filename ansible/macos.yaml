@@ -179,6 +179,19 @@
         state: link
         force: true
 
+    # state.json next to config.toml holds machine-local session state and
+    # stays out of the repo -- link the file, not the directory
+    - name: Create links - hunk config dir
+      ansible.builtin.file:
+        path: "~/.config/hunk"
+        state: directory
+    - name: Create links - hunk config
+      ansible.builtin.file:
+        src: ~/dotfiles/hunk/config.toml
+        dest: "~/.config/hunk/config.toml"
+        state: link
+        force: true
+
     - name: Create links - vscode dir
       ansible.builtin.file:
         path: "~/Library/Application Support/Code/User/"
