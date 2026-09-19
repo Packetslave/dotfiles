@@ -493,3 +493,4 @@ alias fable="claude --model claude-fable-5 --effort high"
 # This line should always be last
 >&2 echo ✅ Done with zshrc
 
+alias reload='. ~/.zshrc'
