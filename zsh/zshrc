@@ -263,7 +263,7 @@ unalias rg
 unalias gdw
 alias gdw="gd -w"
 alias utc="date -z UTC"
-alias buu="brew update && brew upgrade"
+alias buu="brew update && HOMEBREW_NO_UPGRADE_AUTO_UPDATES_CASKS=1 brew upgrade"
 
 function git-rotate() { git branch -D $1 && gcb $1 ; }
 
@@ -481,6 +481,8 @@ fi
 
 alias suk="security unlock-keychain"
 alias otx="~/bin/onetab-export --format txt | curl -sS --data-binary @- -H 'Content-Type: text/plain' https://twotab.k8s.internal/api/bookmarks/import"
+alias bts="tailscale down && sleep 2 && tailscale up"
+alias hd="hunk diff"
 
 # Claude Code model shortcuts
 alias opus="claude --model claude-opus-5 --effort high"
