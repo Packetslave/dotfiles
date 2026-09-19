@@ -417,6 +417,18 @@ if [[ -d "$COWORK_DIR/.git" ]]; then
         info "gmail-duckdb checkout already present."
     fi
 
+    # wikisearch: OUR code, so src/wikisearch rather than _external/ — its own
+    # repo for the same reason as gmail-duckdb (cowork gitignores src/ outright).
+    # The hybrid search daemon over the wiki (MCP + REST on :2017, PAC-707).
+    # No build step here: the playbook runs `uv sync` and installs the service
+    # unit that ships with the checkout, so a clone is all the script provides.
+    WIKISEARCH_DIR="$COWORK_DIR/src/wikisearch"
+    if [[ ! -d "$WIKISEARCH_DIR" ]]; then
+        git clone "${ORIGIN_USER}@${ORIGIN_HOST}:git/wikisearch.git" "$WIKISEARCH_DIR"
+    else
+        info "wikisearch checkout already present."
+    fi
+
     # ofdump: OUR code, so src/ofdump rather than _external/ — its own repo for
     # the same reason as gmail-duckdb (cowork gitignores src/ outright). Only
     # Macs with OmniFocus can run it (osascript + evaluate javascript), but

@@ -522,10 +522,120 @@
       ansible.builtin.command:
         cmd: "{{ homebrew_prefix }}/bin/brew services start caddy"
 
+    # wikisearch: the hybrid search daemon over the cowork wiki (MCP + REST on
+    # 127.0.0.1:2017; cowork Specs/spec-wikisearch-v1-2026-09-18.md, PAC-714).
+    # Its own repo at src/wikisearch, cloned by the setup scripts like
+    # gmail-duckdb. The service unit and launch agent ship WITH the checkout
+    # (systemd/, launchd/) so they stay next to the code; the playbook syncs the
+    # venv and installs whichever one this OS uses. Skipped on Reddit machines
+    # (the vault is personal) and until the checkout exists.
+    - name: Check for the wikisearch checkout
+      ansible.builtin.stat:
+        path: "{{ ansible_facts.env.HOME }}/src/cowork/src/wikisearch/pyproject.toml"
+      register: cowork_wikisearch
+      tags: [wikisearch]
+
+    - name: Sync the wikisearch venv
+      when:
+        - cowork_wikisearch.stat.exists
+        - not reddit_machine.stat.exists
+        # uv sync writes .venv; there is no dry-run that also reports drift.
+        - not ansible_check_mode
+      ansible.builtin.command:
+        cmd: "{{ homebrew_prefix }}/bin/uv sync --frozen"
+        chdir: "{{ cowork_wikisearch.stat.path | dirname }}"
+      register: wikisearch_sync
+      # uv reports "Installed N packages" only when it changed the venv; an
+      # up-to-date venv says "Audited N packages" instead.
+      changed_when: "'Installed' in wikisearch_sync.stderr"
+      notify:
+        - Restart wikisearch
+        - Reload wikisearch agent
+      tags: [wikisearch]
+
+    - name: Create the systemd user unit directory
+      when:
+        - cowork_wikisearch.stat.exists
+        - not reddit_machine.stat.exists
+        - ansible_facts['system'] == 'Linux'
+      ansible.builtin.file:
+        path: "{{ ansible_facts.env.HOME }}/.config/systemd/user"
+        state: directory
+        mode: "0755"
+      tags: [wikisearch]
+
+    - name: Link the wikisearch systemd user unit
+      when:
+        - cowork_wikisearch.stat.exists
+        - not reddit_machine.stat.exists
+        - ansible_facts['system'] == 'Linux'
+      ansible.builtin.file:
+        src: "{{ cowork_wikisearch.stat.path | dirname }}/systemd/wikisearch.service"
+        dest: "{{ ansible_facts.env.HOME }}/.config/systemd/user/wikisearch.service"
+        state: link
+      notify: Restart wikisearch
+      tags: [wikisearch]
+
+    # linux.yaml enables lingering, which is what lets a user unit run with no
+    # login session; without it the daemon stops when the last SSH session ends.
+    - name: Enable and start the wikisearch systemd user unit
+      when:
+        - cowork_wikisearch.stat.exists
+        - not reddit_machine.stat.exists
+        - ansible_facts['system'] == 'Linux'
+      ansible.builtin.systemd_service:
+        name: wikisearch
+        scope: user
+        daemon_reload: true
+        enabled: true
+        state: started
+      tags: [wikisearch]
+
+    - name: Create the LaunchAgents directory
+      when:
+        - cowork_wikisearch.stat.exists
+        - not reddit_machine.stat.exists
+        - ansible_facts['system'] == 'Darwin'
+      ansible.builtin.file:
+        path: "{{ ansible_facts.env.HOME }}/Library/LaunchAgents"
+        state: directory
+      tags: [wikisearch]
+
+    # launchd does not expand $HOME, so the checked-in plist carries __HOME__
+    # placeholders and is rendered here rather than templated with Jinja.
+    - name: Install the wikisearch launch agent
+      when:
+        - cowork_wikisearch.stat.exists
+        - not reddit_machine.stat.exists
+        - ansible_facts['system'] == 'Darwin'
+      ansible.builtin.copy:
+        content: "{{ lookup('file', cowork_wikisearch.stat.path | dirname ~ '/launchd/com.packetslave.wikisearch.plist') | replace('__HOME__', ansible_facts.env.HOME) }}"
+        dest: "{{ ansible_facts.env.HOME }}/Library/LaunchAgents/com.packetslave.wikisearch.plist"
+        mode: "0644"
+      notify: Reload wikisearch agent
+      tags: [wikisearch]
+
   handlers:
     - name: Restart Caddy
       ansible.builtin.command:
         cmd: "{{ homebrew_prefix }}/bin/brew services restart caddy"
+
+    - name: Restart wikisearch
+      when: ansible_facts['system'] == 'Linux'
+      ansible.builtin.systemd_service:
+        name: wikisearch
+        scope: user
+        daemon_reload: true
+        state: restarted
+
+    # bootout first (tolerating "not loaded"), because bootstrap refuses to
+    # load a label that is already running -- this is launchd's reload.
+    - name: Reload wikisearch agent
+      when: ansible_facts['system'] == 'Darwin'
+      ansible.builtin.shell:
+        cmd: |
+          launchctl bootout "gui/$(id -u)/com.packetslave.wikisearch" 2>/dev/null || true
+          launchctl bootstrap "gui/$(id -u)" ~/Library/LaunchAgents/com.packetslave.wikisearch.plist
 
 - name: Configure macOS
   ansible.builtin.import_playbook: macos.yaml
