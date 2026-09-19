@@ -1,0 +1,16 @@
+{
+  "UserPromptSubmit": [
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "jq -n --arg ctx \"$(date '+%A, %B %-d, %Y at %-I:%M %p %Z (UTC%z)')\" '{hookSpecificOutput:{hookEventName:\"UserPromptSubmit\",additionalContext:(\"Current local date and time: \" + $ctx + \". This is refreshed on every message; use it as your reference for \\\"now\\\" and \\\"today\\\".\")}}'"
+        },
+        {
+          "type": "command",
+          "command": "jq -n --arg ctx \"$(hostname)\" '{hookSpecificOutput:{hookEventName:\"UserPromptSubmit\",additionalContext:(\"Hostname: \" + $ctx + \". This is refreshed on every message; use it as your reference for which machine you are currently running on.\")}}'"
+        }
+      ]
+    }
+  ]
+}

@@ -38,6 +38,7 @@
       - git-delta
       - glow # yazi previews markdown through it (see yazi/yazi.toml)
       - golangci-lint
+      - hunk
       - jq # claude/statusline.sh parses JSON with it
       - kubernetes-cli # the kubectl binary; formula name does not match the command
       - kubeseal # seals Secrets for the k3s cluster's sealed-secrets controller (homelab)
@@ -87,6 +88,17 @@
         path: /opt/reddit
       register: reddit_machine
       tags: [always]
+
+    # Agent skills live in one place on personal machines (~/.claude/skills)
+    # and another on Reddit-managed ones (~/.agents/skills) -- unlike the rest
+    # of the Claude tooling above, skills themselves are not skipped on Reddit
+    # machines, just relocated.
+    - name: Determine the agent skills directory
+      ansible.builtin.set_fact:
+        agent_skills_dir: >-
+          {{ ansible_facts.env.HOME }}/{{ '.agents/skills' if reddit_machine.stat.exists
+             else '.claude/skills' }}
+      tags: [always, skills]
 
     # authorized_keys is localhost convergence, so it belongs here and not in
     # homelab. Push cannot solve this: the host you cannot SSH into is exactly
@@ -401,7 +413,6 @@
         state: link
         force: true
       when: not reddit_machine.stat.exists
-
     # Claude Code deletes local session transcripts after cleanupPeriodDays,
     # default 30. A machine offline longer than that does not sync late -- it
     # loses that history permanently at its next launch. Found the hard way on
@@ -423,6 +434,20 @@
       check_mode: false
       register: claude_retention
       changed_when: claude_retention.stdout is match('(CHANGED|WOULD-CHANGE)')
+      when: not reddit_machine.stat.exists
+
+    # Same reasoning and merge pattern as the retention task above: hooks live
+    # in ~/.claude/settings.json, which Claude Code owns and rewrites, so the
+    # UserPromptSubmit hooks (date/time, hostname) are merged in from
+    # claude/hooks.json rather than symlinking the whole file.
+    - name: Merge claude hooks
+      ansible.builtin.command:
+        cmd: >-
+          python3 ~/dotfiles/claude/set-hooks.py
+          {{ '--check' if ansible_check_mode else '' }}
+      check_mode: false
+      register: claude_hooks
+      changed_when: claude_hooks.stdout is match('(CHANGED|WOULD-CHANGE)')
       when: not reddit_machine.stat.exists
 
     # path, because the module searches /usr/local/bin *first* by default and
@@ -614,6 +639,46 @@
         mode: "0644"
       notify: Reload wikisearch agent
       tags: [wikisearch]
+
+    - name: Create links - agent skills dir
+      ansible.builtin.file:
+        path: "{{ agent_skills_dir }}"
+        state: directory
+      tags: [skills]
+
+    - name: Find active agent skills
+      ansible.builtin.find:
+        paths: ~/dotfiles/claude/skills/active
+        file_type: directory
+      register: active_agent_skills
+      tags: [skills]
+
+    - name: Link active agent skills
+      ansible.builtin.file:
+        src: "{{ item.path }}"
+        dest: "{{ agent_skills_dir }}/{{ item.path | basename }}"
+        state: link
+        force: true
+      loop: "{{ active_agent_skills.files }}"
+      loop_control:
+        label: "{{ item.path | basename }}"
+      tags: [skills]
+
+    - name: Find disabled agent skills
+      ansible.builtin.find:
+        paths: ~/dotfiles/claude/skills/disabled
+        file_type: directory
+      register: disabled_agent_skills
+      tags: [skills]
+
+    - name: Remove disabled agent skills
+      ansible.builtin.file:
+        path: "{{ agent_skills_dir }}/{{ item.path | basename }}"
+        state: absent
+      loop: "{{ disabled_agent_skills.files }}"
+      loop_control:
+        label: "{{ item.path | basename }}"
+      tags: [skills]
 
   handlers:
     - name: Restart Caddy

@@ -1,65 +1,39 @@
-# Global instructions
+# Tools, Environments, and Languages
 
-Applies to every Claude Code session on this machine, in any repository.
-Project-level `CLAUDE.md` files add to this; where they genuinely conflict, the
-project file wins.
+## General
 
-## Staging commits
+- never assume or guess the current date/time. When doing something time-related,
+  always confirm with `date
 
-**Never `git add -A`, `git add .`, or `git commit -a`.** Stage explicit paths,
-in every repository, every time.
+## Shell
 
-The reason is not tidiness. Several Claude Code sessions can be running against
-one checkout at once, and unrelated work is routinely sitting in the tree beside
-yours — another session's in-flight edits, a hook's regenerated file, a build
-artifact. A blanket stage sweeps all of it into your commit, under your message,
-and the mistake is invisible in the commit you just made: nothing errors, and
-the diff looks like something you wrote. It has happened (2026-08-27, cowork —
-a parallel session's uncommitted skill edit, caught only because the diffstat
-was read before committing).
+- I use zsh on all my machines, not bash.
 
-- **`git status` is not a list of *your* changes.** Diff each path before you
-  stage it.
-- **Re-check `git status` between commits** — the tree moves under you.
-- If a file you did not touch is dirty, leave it alone and say so in the report.
-- **Never leave files staged across tool calls.** `git commit` commits the whole
-  INDEX, not the paths you just added — an earlier, forgotten `git rm --cached`
-  or `git add` rides along, and in a shared checkout a concurrent session's bare
-  `git commit` can sweep up *your* staged work under *its* message first. Put the
-  `git add` and the `git commit` in the SAME call, or skip the index entirely
-  with `git commit -F <file> -- <path> <path>`. The pathspec form needs the file
-  already tracked; for a new file, `git add <that one explicit path>` first, then
-  name every path on the commit. Verify with `git diff --cached --stat | tail -1`
-  before committing — if the file count surprises you, stop.
-- Staging a generated or exported file (a JSONL export, a lockfile)? Confirm its
-  diff contains only your own changes first.
+- when running `rm`, `mv`, `cp`, `ls` always run them as `command <name> <args>`
+  to avoid issues with shell aliasing (`rm` is frequently aliased to `rm -i`, for
+  example).
 
-`git add -p` is fine, as is `git add <path>` for a file or directory you
-genuinely own in full.
+## Claude Code settings
 
-## Searching the filesystem
+- `~/.claude/settings.local.json` is never read. `settings.local.json` only
+  exists as a project-level concept (`<project>/.claude/settings.local.json`,
+  a gitignored personal override next to that project's `settings.json`) —
+  there is no user/home-level equivalent. Global config belongs in
+  `~/.claude/settings.json` only.
 
-**Never run a full recursive scan of the filesystem root or the home
-directory.** No `find /`, `find ~`, `rg` / `grep -r` over `/` or `$HOME`, `ls -R
-~`, or equivalent. They are slow, bury the useful result in permission errors
-and cache noise, and wander into mounted volumes, backups and other people's
-data.
+- `~/.claude/settings.json` must never be symlinked or templated wholesale.
+  Claude Code owns and rewrites it at runtime (plugin toggles, GrowthBook
+  flags, session state), so a symlink into dotfiles turns those runtime
+  writes into git-tracked changes and leaks machine-specific state (enabled
+  plugins, theme) across every machine sharing the repo. To manage one key
+  from dotfiles, merge it in with a small script that reads the live file,
+  sets just that key, and writes back atomically (see `claude/set-retention.py`
+  and `claude/set-hooks.py` for the pattern) — don't add more keys to that
+  approach speculatively; only ones actually causing pain.
 
-**Scope every search to a known root** — the repository you are working in, a
-specific config directory, a Homebrew prefix, a single collection path.
-
-**Better: ask the tool that already knows.** A broad scan is almost always a
-lazy substitute for a precise query that exists:
-
-| Instead of scanning for… | Ask |
-|---|---|
-| an ansible module's file or options | `ansible-doc <collection>.<module>` |
-| where a collection is installed | `ansible-galaxy collection list` |
-| a formula's install prefix | `brew --prefix <formula>` |
-| a Python module's path | `python3 -c "import x; print(x.__file__)"` |
-| an executable's location | `command -v <name>` |
-| a library's flags | `pkg-config --cflags --libs <lib>` |
-| files tracked by a repo | `git ls-files` / `git grep` |
-
-If a wide search really is the right tool, say what root you are scoping it to
-and why the targeted query does not work.
+- To debug whether a hook is actually loading/firing, don't just eyeball the
+  JSON — run `claude --debug hooks -p "test"` and check the "Watching for
+  changes in setting files" line (confirms the file path is even a candidate)
+  and the "Hook UserPromptSubmit ... success" lines (confirms it executed and
+  what it returned). A hook can have perfectly valid JSON and still never run
+  because it lives at a path nothing reads.
