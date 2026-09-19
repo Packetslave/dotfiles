@@ -480,6 +480,7 @@ if [[ -o interactive && -n "$SSH_CONNECTION" && "$OSTYPE" == darwin* ]] ; then
 fi
 
 alias suk="security unlock-keychain"
+alias otx="~/bin/onetab-export --format txt | curl -sS --data-binary @- -H 'Content-Type: text/plain' https://twotab.k8s.internal/api/bookmarks/import"
 
 # Claude Code model shortcuts
 alias opus="claude --model claude-opus-5 --effort high"

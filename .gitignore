@@ -8,3 +8,4 @@ emacs/emacs.d/ido.last
 .codex-backup/
 .private-journal/
 mouseless/configs/*.bak
+bin/ofinbox

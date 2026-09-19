@@ -19,6 +19,8 @@ typeset -U path PATH
 if [[ -z "$HOMEBREW_PREFIX" ]] ; then
   for _brew in /opt/homebrew/bin/brew /home/linuxbrew/.linuxbrew/bin/brew /usr/local/bin/brew ; do
     if [ -x "$_brew" ] ; then
+      export HOMEBREW_NO_UPGRADE_AUTO_UPDATES_CASKS=1
+
       eval "$("$_brew" shellenv)"
       break
     fi
