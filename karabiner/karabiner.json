@@ -1,10 +1,53 @@
 {
+    "machine_specific": { "krbn-14ebad95-cfff-4b3c-a607-0204ba756913": { "external_editor_path": "/Applications/Visual Studio Code.app" } },
     "profiles": [
         {
             "complex_modifications": {
                 "rules": [
                     {
-                        "description": "Hyper Key: Right Option → left shift + left option + left command (⌃⇧⌥⌘)",
+                        "description": "Hyper Key (Kinesis 360 Pro): Right Control → left shift + left option + left command (⌃⇧⌥⌘)",
+                        "manipulators": [
+                            {
+                                "conditions": [
+                                    {
+                                        "identifiers": [
+                                            { "vendor_id": 7504 },
+                                            { "product_id": 24926 },
+                                            { "is_built_in_keyboard": false }
+                                        ],
+                                        "type": "device_if"
+                                    }
+                                ],
+                                "from": {
+                                    "key_code": "right_control",
+                                    "modifiers": { "optional": ["any"] }
+                                },
+                                "to": [
+                                    {
+                                        "set_variable": {
+                                            "name": "hyper_right_option",
+                                            "value": 1
+                                        }
+                                    },
+                                    {
+                                        "key_code": "left_control",
+                                        "modifiers": ["left_shift", "left_option", "left_command"]
+                                    }
+                                ],
+                                "to_after_key_up": [
+                                    {
+                                        "set_variable": {
+                                            "name": "hyper_right_option",
+                                            "value": 0
+                                        }
+                                    }
+                                ],
+                                "type": "basic"
+                            }
+                        ]
+                    },
+                    {
+                        "description": "Hyper Key (MBP): Right Option → left shift + left option + left command (⌃⇧⌥⌘)",
                         "manipulators": [
                             {
                                 "conditions": [
@@ -71,6 +114,7 @@
                     },
                     {
                         "description": "Page Down → Hyper (⌘⌃⌥⇧)",
+                        "enabled": false,
                         "manipulators": [
                             {
                                 "from": {
